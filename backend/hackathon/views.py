@@ -384,6 +384,33 @@ class GameStartView(View):
             "words": words_out,
             "time_limit": 60
         })
+    
+# Add this to your Django views.py for debugging
+
+class DebugGameView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        session = _get_session(request)
+        if not session:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        # Get all active games for this user
+        active_games = GameResults.objects.filter(
+            player_id=str(session.user.id),
+            end_time__isnull=True
+        ).order_by('-start_time')
+        
+        games_list = []
+        for game in active_games:
+            games_list.append({
+                "game_id": game.game_id,
+                "start_time": game.start_time.isoformat(),
+                "absolute_score": game.absolute_score,
+            })
+        
+        return JsonResponse({
+            "active_games": games_list,
+            "count": len(games_list)
+        })
 
 class GameSubmitView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
@@ -394,10 +421,18 @@ class GameSubmitView(View):
         payload = _json_body(request)
         print("SUBMIT PAYLOAD:", payload)  # 🔍 DEBUG
 
+        # Handle both snake_case and camelCase versions
         round_id = payload.get("roundId") or payload.get("round_id")
         synonym_ids = payload.get("synonyms", [])
         antonym_ids = payload.get("antonyms", [])
-        time_taken = float(payload.get("timeTaken") or payload.get("time_taken") or 60)
+        
+        # Handle timeTaken/time_taken
+        time_taken = payload.get("timeTaken") or payload.get("time_taken")
+        if time_taken is not None:
+            time_taken = float(time_taken)
+        else:
+            time_taken = 60
+            
         reason = payload.get("reason")
 
         if not round_id:
@@ -430,32 +465,39 @@ class GameSubmitView(View):
         score = 0
         correct = 0
 
+        # Calculate correct answers
+        for wid in synonym_ids:
+            w = id_map.get(wid)
+            if w and w["type"] == "synonym" and w["word"].lower() in synonyms:
+                score += 1
+                correct += 1
+
+        for wid in antonym_ids:
+            w = id_map.get(wid)
+            if w and w["type"] == "antonym" and w["word"].lower() in antonyms:
+                score += 1
+                correct += 1
+
+        # Add time bonus if not time expired
         if reason != "TIME_EXPIRED":
-            for wid in synonym_ids:
-                w = id_map.get(wid)
-                if w and w["type"] == "synonym" and w["word"].lower() in synonyms:
-                    score += 1
-                    correct += 1
-
-            for wid in antonym_ids:
-                w = id_map.get(wid)
-                if w and w["type"] == "antonym" and w["word"].lower() in antonyms:
-                    score += 1
-                    correct += 1
-
-            score += max(0, (60 - time_taken) * 0.1)
+            time_bonus = max(0, (60 - time_taken) * 0.1)
+            score += time_bonus
+        else:
+            time_bonus = 0
 
         score = round(score, 2)
 
-        game.absolute_score += score
-        game.duration += int(time_taken)
-        game.words_played += len(synonym_ids) + len(antonym_ids)
+        # Update game record
+        game.absolute_score = score
+        game.duration = int(time_taken)
+        game.words_played = len(synonym_ids) + len(antonym_ids)
         game.end_time = timezone.now()
 
-        percentage = (
-            (game.absolute_score / game.words_played) * 100
-            if game.words_played else 0
-        )
+        # Calculate percentage
+        if game.words_played > 0:
+            percentage = (score / 8) * 100  # Max score is 8 for words + time bonus
+        else:
+            percentage = 0
         game.percentage_score = f"{round(percentage, 2)}"
         game.save()
 
@@ -463,9 +505,9 @@ class GameSubmitView(View):
             "score": score,
             "total_correct": correct,
             "base_score": correct,
-            "time_bonus": round(max(0, (60 - time_taken) * 0.1), 2),
-            "correct_synonyms": len(synonym_ids),
-            "correct_antonyms": len(antonym_ids),
+            "time_bonus": round(time_bonus, 2),
+            "correct_synonyms": sum(1 for wid in synonym_ids if id_map.get(wid) and id_map[wid]["type"] == "synonym" and id_map[wid]["word"].lower() in synonyms),
+            "correct_antonyms": sum(1 for wid in antonym_ids if id_map.get(wid) and id_map[wid]["type"] == "antonym" and id_map[wid]["word"].lower() in antonyms),
         })
 
 class GameScoreView(View):
