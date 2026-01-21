@@ -1,6 +1,8 @@
 import json
 import re
+import random
 from datetime import timedelta
+import uuid
 
 from django.http import HttpRequest, JsonResponse
 from django.db import transaction
@@ -17,7 +19,7 @@ from .auth import (
     verify_otp_via_gateway,
     verify_password,
 )
-from .models import AppUser, AppUserMember, AuthSession, OtpChallenge
+from .models import AppUser, AppUserMember, AuthSession, OtpChallenge, Word, SortonymWords, HackathonGameround, GameResults
 
 
 def _normalize_phone(raw: str) -> str:
@@ -61,7 +63,26 @@ def _json_body(request: HttpRequest) -> dict:
 
 class HealthView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        return JsonResponse({'status': 'ok'})
+        try:
+            # Test database connection
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+            
+            # Check if we have basic data
+            word_count = Word.objects.count()
+            
+            return JsonResponse({
+                'status': 'ok',
+                'database': 'connected',
+                'words': word_count
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'database': 'disconnected',
+                'error': str(e)
+            }, status=500)
 
 
 class ApiLoginView(View):
@@ -310,3 +331,223 @@ class ApiOtpVerifyView(View):
                 'user': {'id': user.id, 'username': user.username},
             }
         )
+
+class GameStartView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        session = _get_session(request)
+        if not session:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        anchor = SortonymWords.objects.order_by("?").first()
+        if not anchor:
+            return JsonResponse({"error": "No words available"}, status=404)
+
+        related = (
+            [{"word": w, "type": "synonym"} for w in anchor.get_synonyms()] +
+            [{"word": w, "type": "antonym"} for w in anchor.get_antonyms()]
+        )
+
+        if len(related) != 8:
+            return JsonResponse({"error": "Invalid word data"}, status=500)
+
+        random.shuffle(related)
+
+        # 👇 Frontend only needs id + word + type
+        words_out = [
+            {
+                "id": i,                # virtual id (frontend only)
+                "word": r["word"],
+                "type": r["type"]
+            }
+            for i, r in enumerate(related)
+        ]
+
+        game = GameResults.objects.create(
+            game_id=str(uuid.uuid4()),
+            game_name="Sortonym",
+            player_id=str(session.user.id),
+            start_time=timezone.now(),
+            absolute_score=0,
+            duration=0,
+            words_played=0,
+            percentage_score="0",
+            game_session_data=json.dumps({
+                "anchor_id": anchor.word_id,
+                "words": words_out   # 🔑 store words for validation
+            }),
+        )
+
+        return JsonResponse({
+            "round_id": game.game_id,
+            "anchor_word": anchor.anchor_word,
+            "anchor_id": anchor.word_id,
+            "words": words_out,
+            "time_limit": 60
+        })
+
+class GameSubmitView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        session = _get_session(request)
+        if not session:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+
+        payload = _json_body(request)
+        print("SUBMIT PAYLOAD:", payload)  # 🔍 DEBUG
+
+        round_id = payload.get("roundId") or payload.get("round_id")
+        synonym_ids = payload.get("synonyms", [])
+        antonym_ids = payload.get("antonyms", [])
+        time_taken = float(payload.get("timeTaken") or payload.get("time_taken") or 60)
+        reason = payload.get("reason")
+
+        if not round_id:
+            return JsonResponse({"error": "Missing roundId"}, status=400)
+
+        game = GameResults.objects.filter(
+            game_id=round_id,
+            player_id=str(session.user.id),
+            end_time__isnull=True
+        ).first()
+
+        if not game:
+            return JsonResponse({"error": "Invalid or completed round"}, status=400)
+
+        session_data = json.loads(game.game_session_data or "{}")
+        anchor_id = session_data.get("anchor_id")
+        words = session_data.get("words", [])
+
+        if not anchor_id or not words:
+            return JsonResponse({"error": "Corrupted game session"}, status=400)
+
+        anchor = SortonymWords.objects.filter(word_id=anchor_id).first()
+        if not anchor:
+            return JsonResponse({"error": "Invalid anchor"}, status=400)
+
+        synonyms = [s.lower() for s in anchor.get_synonyms()]
+        antonyms = [a.lower() for a in anchor.get_antonyms()]
+        id_map = {w["id"]: w for w in words}
+
+        score = 0
+        correct = 0
+
+        if reason != "TIME_EXPIRED":
+            for wid in synonym_ids:
+                w = id_map.get(wid)
+                if w and w["type"] == "synonym" and w["word"].lower() in synonyms:
+                    score += 1
+                    correct += 1
+
+            for wid in antonym_ids:
+                w = id_map.get(wid)
+                if w and w["type"] == "antonym" and w["word"].lower() in antonyms:
+                    score += 1
+                    correct += 1
+
+            score += max(0, (60 - time_taken) * 0.1)
+
+        score = round(score, 2)
+
+        game.absolute_score += score
+        game.duration += int(time_taken)
+        game.words_played += len(synonym_ids) + len(antonym_ids)
+        game.end_time = timezone.now()
+
+        percentage = (
+            (game.absolute_score / game.words_played) * 100
+            if game.words_played else 0
+        )
+        game.percentage_score = f"{round(percentage, 2)}"
+        game.save()
+
+        return JsonResponse({
+            "score": score,
+            "total_correct": correct,
+            "base_score": correct,
+            "time_bonus": round(max(0, (60 - time_taken) * 0.1), 2),
+            "correct_synonyms": len(synonym_ids),
+            "correct_antonyms": len(antonym_ids),
+        })
+
+class GameScoreView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        session = _get_session(request)
+        if session is None or not session.user.is_active:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+        try:
+            # Get user's game statistics from the gamesession table
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        COALESCE(SUM(total_score), 0) as total_score,
+                        COUNT(*) as rounds_played,
+                        COALESCE(MAX(total_score), 0) as best_round_score,
+                        COALESCE(AVG(total_score), 0) as average_score
+                    FROM hackathon_gamesession 
+                    WHERE user_id = %s AND is_completed = 1
+                """, [session.user.id])
+                
+                result = cursor.fetchone()
+                if result:
+                    total_score, rounds_played, best_round_score, average_score = result
+                else:
+                    total_score = rounds_played = best_round_score = average_score = 0
+            
+            return JsonResponse({
+                'total_score': float(total_score),
+                'rounds_played': rounds_played,
+                'best_round_score': float(best_round_score),
+                'average_score': float(average_score)
+            })
+        except Exception as e:
+            return JsonResponse({
+                'total_score': 0,
+                'rounds_played': 0,
+                'best_round_score': 0,
+                'average_score': 0
+            })
+
+
+class LeaderboardView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        session = _get_session(request)
+        if session is None or not session.user.is_active:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+        try:
+            # Get top 10 players by total score from gamesession table
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        u.team_no,
+                        m.name,
+                        SUM(gs.total_score) as total_score,
+                        COUNT(gs.id) as rounds_played,
+                        MAX(gs.total_score) as best_round
+                    FROM hackathon_gamesession gs
+                    JOIN hackathon_appuser u ON gs.user_id = u.id
+                    LEFT JOIN hackathon_appusermember m ON gs.member_id = m.id
+                    WHERE gs.is_completed = 1
+                    GROUP BY u.id, u.team_no, m.name
+                    ORDER BY total_score DESC
+                    LIMIT 10
+                """)
+                
+                results = cursor.fetchall()
+            
+            leaderboard = []
+            for i, (team_no, name, total_score, rounds_played, best_round) in enumerate(results, 1):
+                leaderboard.append({
+                    'rank': i,
+                    'team_no': team_no,
+                    'name': name or f'Team {team_no}',
+                    'total_score': float(total_score or 0),
+                    'rounds_played': rounds_played,
+                    'best_round': float(best_round or 0)
+                })
+            
+            return JsonResponse({'leaderboard': leaderboard})
+        except Exception as e:
+            return JsonResponse({'leaderboard': []})
