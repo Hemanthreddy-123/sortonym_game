@@ -8,7 +8,7 @@ export function apiLogin({ username, password }) {
 }
 
 export function apiMe({ token }) {
-  return httpJson('/api/me', {
+  return httpJson('/api/home', {
     method: 'GET',
     token,
   })
@@ -32,5 +32,19 @@ export function apiOtpVerify({ challenge_id, otp }) {
   return httpJson('/api/otp/verify', {
     method: 'POST',
     body: { challenge_id, otp },
+  })
+}
+
+export function apiForgotPassword({ email, password }) {
+  return httpJson('/api/forgot-password', {
+    method: 'POST',
+    body: { email, password },
+  })
+}
+
+export function apiRegister({ display_name, email, phone_number, password }) {
+  return httpJson('/api/register', {
+    method: 'POST',
+    body: { display_name, email, phone_number, password },
   })
 }

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext'
-import '../styles/landing.css'
+import { useAuth } from '../auth/AuthContext.jsx'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -16,27 +15,19 @@ function LandingPage() {
         setMenuOpen(false)
       }
     }
+
     document.addEventListener('mousedown', onDocMouseDown)
     return () => document.removeEventListener('mousedown', onDocMouseDown)
   }, [])
 
   async function onLogout() {
     await signOut()
-    navigate('/login')
-  }
-
-  function handleLetsGo() {
-    navigate('/game')
-  }
-
-  function handleLeaderboard() {
-    navigate('/leaderboard')
+    navigate('/auth')
   }
 
   return (
     <div className="landing-shell">
       <div className="landing-topbar">
-        <div className="landing-team">Team No: {user?.team_no ?? '--'}</div>
         <div className="dropdown" ref={menuRef}>
           <button
             className="landing-userbtn"
@@ -44,21 +35,19 @@ function LandingPage() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            <i className="bi bi-person-circle"></i>
+            <i className="bi bi-person-circle" />
           </button>
+
           <ul
-            className={`dropdown-menu dropdown-menu-end landing-dropdown${
-              menuOpen ? ' show' : ''
-            }`}
+            className={`dropdown-menu dropdown-menu-end landing-dropdown${menuOpen ? ' show' : ''}`}
           >
             <li className="px-3 pt-2 pb-1">
               <div className="landing-userline">
-                <i className="bi bi-person-circle"></i>
+                <i className="bi bi-person-circle" />
                 <div>
                   <div className="landing-username">{member?.name || '--'}</div>
                   <div className="landing-userdetail">{member?.email || '--'}</div>
                   <div className="landing-userdetail">{member?.phone || '--'}</div>
-                  <div className="landing-userdetail">{member?.member_id || '--'}</div>
                 </div>
               </div>
             </li>
@@ -75,34 +64,8 @@ function LandingPage() {
       </div>
 
       <main className="landing-center" aria-live="polite">
-        <h1 className="landing-title">Sortonym</h1>
-        <div className="landing-instructions">
-          <p>
-            One anchor word will be shown with 8 words appearing below it. 
-            4 of these words are synonyms and 4 are antonyms of the anchor word.
-          </p>
-          <p>
-            Drag the synonyms into the green box and the antonyms into the red box. 
-            You must complete the sorting before the timer ends to score points.
-          </p>
-        </div>
-        
-        <div className="landing-actions">
-          <button 
-            className="btn btn-primary landing-lets-go-btn" 
-            type="button"
-            onClick={handleLetsGo}
-          >
-            Let's Go
-          </button>
-          <button 
-            className="btn btn-secondary landing-leaderboard-btn" 
-            type="button"
-            onClick={handleLeaderboard}
-          >
-            🏆 Leaderboard
-          </button>
-        </div>
+        <h1 className="landing-title">Welcome to hackathon</h1>
+        <p className="landing-subtitle">This is your Starting point of your hackathon.</p>
       </main>
     </div>
   )

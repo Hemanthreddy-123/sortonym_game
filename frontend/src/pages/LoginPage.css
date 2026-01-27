@@ -3,7 +3,7 @@
 -------------------------------- */
 .page-wrapper {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     background: url("../assets/hackathon_bg.webp") center / cover no-repeat;
     display: flex;
     justify-content: flex-end;
@@ -13,9 +13,9 @@
    Glass Panel
 -------------------------------- */
 .glass-panel {
-    width: 31%;
-    height: 100%;
-    padding: 40px;
+    width: clamp(320px, 34vw, 520px);
+    min-height: 100vh;
+    padding: clamp(20px, 3vw, 40px);
     background: rgba(41, 40, 40, 0.66);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(6px);
@@ -130,6 +130,7 @@ label {
 -------------------------------- */
 .otp-boxes {
     display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     margin-top: 8px;
 }
@@ -164,14 +165,95 @@ label {
     position: relative;
 }
 
-.password-eye {
+.password-input {
+    position: relative;
+}
+
+.password-control {
+    padding-right: 44px;
+}
+
+.password-toggle {
     position: absolute;
-    right: 14px;
-    top: 65%;
+    right: 10px;
+    top: 50%;
     transform: translateY(-50%);
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.7);
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.75);
     cursor: pointer;
+}
+
+.password-toggle:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.password-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(51, 119, 255, 0.35);
+    border-radius: 6px;
+}
+
+.password-toggle i {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.modal .form-label {
+    color: var(--dark-1);
+}
+
+.forgot-password-under {
+    display: block;
+    width: 100%;
+    text-align: right;
+    margin-top: 8px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary-light);
+    cursor: pointer;
+}
+
+.forgot-password-under:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.create-account-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--light-2);
+}
+
+.create-account-link {
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-light);
+    cursor: pointer;
+}
+
+.create-account-link:disabled {
+    cursor: default;
+    opacity: 0.6;
 }
 
 /* -------------------------------
@@ -216,5 +298,29 @@ label {
 @media (max-width: 768px) {
     .glass-panel {
         width: 100%;
+        border-left: none;
+    }
+
+    .page-wrapper {
+        justify-content: center;
+    }
+
+    .otp-boxes {
+        gap: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .glass-panel {
+        padding: 16px;
+    }
+
+    .otp-boxes {
+        gap: 10px;
+    }
+
+    .otp-boxes input {
+        width: 40px;
+        height: 40px;
     }
 }

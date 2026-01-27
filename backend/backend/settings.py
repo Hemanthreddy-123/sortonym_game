@@ -79,19 +79,13 @@ DATABASES = {
         'HOST': os.getenv('DB_HOST'),
         'PORT': os.getenv('DB_PORT'),
     },
-    'student': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('STUDENT_DB_NAME'),
-        'USER': os.getenv('STUDENT_DB_USER'),
-        'PASSWORD': os.getenv('STUDENT_DB_PASSWORD'),
-        'HOST': os.getenv('STUDENT_DB_HOST'),
-        'PORT': os.getenv('STUDENT_DB_PORT'),
-    },
 }
 
-DATABASE_ROUTERS = [
-    'hackathon.db_router.HackathonDbRouter',
-]
+if not DATABASES['default'].get('NAME'):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
 
 
 # Internationalization

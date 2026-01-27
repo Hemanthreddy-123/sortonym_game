@@ -6,17 +6,17 @@ import RequireAuth from './auth/RequireAuth.jsx'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<Navigate to="/auth" replace />} />
+      <Route path="/auth" element={<LoginPage />} />
       <Route
-        path="/landing"
+        path="/home"
         element={
           <RequireAuth>
             <LandingPage />
           </RequireAuth>
         }
       />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/auth" replace />} />
     </Routes>
   )
 }
