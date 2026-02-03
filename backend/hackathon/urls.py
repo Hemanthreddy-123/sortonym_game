@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 from .views import ApiForgotPasswordView, ApiLoginView, ApiLogoutView, ApiMeView, ApiOtpRequestView, ApiOtpVerifyView, ApiRegisterView, HealthView, ApiGameStartView, ApiGameSubmitView, ApiLeaderboardView
 from django.urls import path
 
-=======
-from django.urls import path
-
-from .views import ApiForgotPasswordView, ApiLoginView, ApiLogoutView, ApiMeView, ApiOtpRequestView, ApiOtpVerifyView, ApiRegisterView, HealthView
-
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
 urlpatterns = [
     path('', HealthView.as_view(), name='health'),
     path('api/login', ApiLoginView.as_view(), name='api_login'),
@@ -17,10 +10,7 @@ urlpatterns = [
     path('api/otp/verify', ApiOtpVerifyView.as_view(), name='api_otp_verify'),
     path('api/home', ApiMeView.as_view(), name='api_home'),
     path('api/logout', ApiLogoutView.as_view(), name='api_logout'),
-<<<<<<< HEAD
     path('api/game/start', ApiGameStartView.as_view(), name='api_game_start'),
     path('api/game/submit', ApiGameSubmitView.as_view(), name='api_game_submit'),
     path('api/leaderboard', ApiLeaderboardView.as_view(), name='api_leaderboard'),
-=======
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
 ]

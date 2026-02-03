@@ -84,11 +84,7 @@ DATABASES = {
 if not DATABASES['default'].get('NAME'):
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
-<<<<<<< HEAD
         'NAME': BASE_DIR / 'db.sqlite3',
-=======
-        'NAME': ':memory:',
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
     }
 
 

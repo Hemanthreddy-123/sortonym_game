@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
 
-<<<<<<< HEAD
 import userAvatar from '../assets/user_avatar.png'
 import '../styles/landing.css'
 import { useTheme } from '../hooks/useTheme'
@@ -34,14 +33,6 @@ function LandingPage() {
 
 
 
-=======
-function LandingPage() {
-  const navigate = useNavigate()
-  const { user, member, signOut } = useAuth()
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef(null)
-
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
   useEffect(() => {
     function onDocMouseDown(e) {
       if (!menuRef.current) return
@@ -59,7 +50,6 @@ function LandingPage() {
     navigate('/auth')
   }
 
-<<<<<<< HEAD
   function handleEditToggle() {
     if (isEditing) {
       updateMember({ name: editName })
@@ -210,49 +200,6 @@ function LandingPage() {
             </section>
           </div>
         </div>
-=======
-  return (
-    <div className="landing-shell">
-      <div className="landing-topbar">
-        <div className="dropdown" ref={menuRef}>
-          <button
-            className="landing-userbtn"
-            type="button"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((v) => !v)}
-          >
-            <i className="bi bi-person-circle" />
-          </button>
-
-          <ul
-            className={`dropdown-menu dropdown-menu-end landing-dropdown${menuOpen ? ' show' : ''}`}
-          >
-            <li className="px-3 pt-2 pb-1">
-              <div className="landing-userline">
-                <i className="bi bi-person-circle" />
-                <div>
-                  <div className="landing-username">{member?.name || '--'}</div>
-                  <div className="landing-userdetail">{member?.email || '--'}</div>
-                  <div className="landing-userdetail">{member?.phone || '--'}</div>
-                </div>
-              </div>
-            </li>
-            <li>
-              <hr className="dropdown-divider" />
-            </li>
-            <li className="px-3 pb-3">
-              <button className="btn btn-danger w-100" type="button" onClick={onLogout}>
-                Logout
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <main className="landing-center" aria-live="polite">
-        <h1 className="landing-title">Welcome to hackathon</h1>
-        <p className="landing-subtitle">This is your Starting point of your hackathon.</p>
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
       </main>
     </div>
   )
