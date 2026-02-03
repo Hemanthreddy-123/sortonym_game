@@ -1,0 +1,256 @@
+/* =====================================================
+   MODERN CERTIFICATE STYLES
+   Theme: Elegant Professional + Light Game Aesthetics
+===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;900&family=Great+Vibes&display=swap');
+
+.certificate-snapshot-container {
+    width: 1000px;
+    /* Fixed Width for High-Res Capture */
+    height: 700px;
+    background: white;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.certificate-modern-wrapper {
+    width: 900px;
+    height: 600px;
+    background: #ffffff;
+    position: relative;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.05);
+    /* Soft premium shadow */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: #1e293b;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* --- Decorative Backgrounds --- */
+.certificate-modern-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.corner-decor {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    z-index: 0;
+    opacity: 0.1;
+    background-image: radial-gradient(circle, #3b82f6 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+
+.top-left {
+    top: 0;
+    left: 0;
+}
+
+.bottom-right {
+    bottom: 0;
+    right: 0;
+    transform: rotate(180deg);
+}
+
+.cert-content-area {
+    position: relative;
+    z-index: 2;
+    padding: 50px 80px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* --- Branding --- */
+.cert-header-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+    color: #64748b;
+}
+
+.app-logo-mark {
+    font-size: 24px;
+    color: #3b82f6;
+}
+
+.app-name-tracking {
+    font-weight: 700;
+    letter-spacing: 4px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* --- Title Block --- */
+.cert-title-block {
+    margin-bottom: 40px;
+}
+
+.title-top {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: #3b82f6;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.title-main {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #1e293b;
+    margin: 5px 0 15px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+.title-divider {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
+/* --- Recipient --- */
+.recipient-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.recipient-name {
+    font-family: 'Outfit', sans-serif;
+    /* Keep clean modern font, or switch to sig style if preferred */
+    font-weight: 900;
+    font-size: 2.8rem;
+    color: #1e293b;
+    margin: 10px 0 20px;
+    text-transform: capitalize;
+}
+
+.recipient-body {
+    font-size: 1.1rem;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.recipient-body strong {
+    color: #3b82f6;
+    font-weight: 800;
+}
+
+/* --- Footer --- */
+.cert-footer-modern {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 20px;
+}
+
+.footer-seg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 200px;
+}
+
+/* Date */
+.date-seg .seg-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1e293b;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 4px;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.date-seg .seg-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+/* Seal */
+.modern-seal {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 4px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+}
+
+.modern-seal i {
+    font-size: 2.5rem;
+    margin-bottom: -5px;
+}
+
+.modern-seal span {
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    margin-top: 5px;
+    color: #1e293b;
+}
+
+/* Signature */
+.sig-image {
+    font-family: 'Great Vibes', cursive;
+    font-size: 1.8rem;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.seg-line {
+    width: 100%;
+    height: 1px;
+    background: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.sig-seg .seg-label {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+
+.cert-meta-id {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: #cbd5e1;
+    letter-spacing: 1px;
+}

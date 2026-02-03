@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Page - Sortonym Challenge</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="results-page-game">
+        <div class="victory-card">
+            
+            <!-- LEFT PANEL: SYNONYMS -->
+            <div class="side-column left-panel">
+                <div class="panel-header theme-green">
+                    <i class="bi bi-check-circle-fill"></i> SYNONYMS
+                </div>
+                <div class="word-list-scroll" id="synonyms-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- CENTER PANEL: SCORE & ACTIONS -->
+            <div class="center-panel">
+                <div class="level-badge" id="level-badge">EASY CHALLENGE</div>
+                <h1 class="victory-title" id="title-text">Great Job!</h1>
+
+                <!-- CIRCULAR SCORE METER -->
+                <div class="score-meter-wrapper">
+                    <div class="score-meter-container">
+                        <svg class="score-svg" viewBox="0 0 200 200">
+                            <circle cx="100" cy="100" r="80" class="meter-bg" />
+                            <circle 
+                                id="progress-ring"
+                                cx="100" cy="100" r="80"
+                                class="meter-progress"
+                                stroke="#10b981"
+                            />
+                        </svg>
+                        <div class="score-value-wrapper">
+                            <span class="score-label-small">TOTAL SCORE</span>
+                            <span class="score-number-big" id="score-display">0.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS -->
+                <div class="stats-row">
+                    <div class="stat-mini">
+                        <span class="stat-mini-label">ACCURACY</span>
+                        <span class="stat-mini-value" id="accuracy-stat">0/0</span>
+                    </div>
+                    <div class="stat-mini">
+                        <span class="stat-mini-label">BONUS</span>
+                        <span class="stat-mini-value" id="bonus-stat">+0.0</span>
+                    </div>
+                </div>
+
+                <!-- BUTTONS -->
+                <button class="btn-main-action" id="btn-play-again">
+                    Play Again
+                </button>
+                <div class="sub-actions">
+                    <button class="btn-sub-action" id="btn-certificate">Certificate</button>
+                    <button class="btn-sub-action" id="btn-share">Share</button>
+                </div>
+                <button class="btn-link-exit" id="btn-exit">Exit</button>
+            </div>
+
+            <!-- RIGHT PANEL: ANTONYMS -->
+            <div class="side-column right-panel">
+                <div class="panel-header theme-red">
+                    <i class="bi bi-x-circle-fill"></i> ANTONYMS
+                </div>
+                <div class="word-list-scroll" id="antonyms-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

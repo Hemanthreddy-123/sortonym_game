@@ -1,0 +1,524 @@
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext.jsx";
+import { startGame, submitGame } from "../../api/gameApi.js";
+import "./GamePage.css";
+
+// Components
+import Timer from "./GameComponents/Timer.jsx";
+import WordTile from "./GameComponents/WordTile.jsx";
+import TargetZone from "./GameComponents/TargetZone.jsx";
+import GameButton from "./GameComponents/GameButton.jsx";
+
+
+function GamePage() {
+    const { token, user, member } = useAuth();
+    const navigate = useNavigate();
+
+    // Reference for capturing result screen image
+    const resultsRef = useRef(null);
+    const certificateRef = useRef(null);
+
+    // Game States: 'idle', 'loading', 'playing', 'completed', 'error'
+    const [gameState, setGameState] = useState('idle');
+    const [gameData, setGameData] = useState(null);
+    const [level, setLevel] = useState('EASY');
+
+    // Word Collections
+    const [availableWords, setAvailableWords] = useState([]);
+    const [synonymBox, setSynonymBox] = useState([]);
+    const [antonymBox, setAntonymBox] = useState([]);
+
+    // UI States
+    const [draggedWord, setDraggedWord] = useState(null);
+    const [dragOverBox, setDragOverBox] = useState(null);
+
+    // Touch States (Mobile)
+    const [touchedWord, setTouchedWord] = useState(null);
+    const touchStartPos = useRef(null);
+
+    // Timer States
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [timeExpired, setTimeExpired] = useState(false);
+    const startTimeRef = useRef(null);
+
+    // Final Results Data
+    const [results, setResults] = useState(null);
+
+    // Effect: Initialize to Level Selection instead of Auto-Start
+    useEffect(() => {
+        if (!gameData && token && gameState === 'idle') {
+            setGameState('level-selection');
+        }
+    }, [token, gameState, gameData]);
+
+    // Effect: Timer Logic
+    useEffect(() => {
+        let timer;
+        if (gameState === 'playing' && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        submitOnTimeUp();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [gameState, timeLeft]);
+
+    /* ================= CORE LOGIC ================= */
+
+    const handleLevelSelect = (selectedLevel) => {
+        setLevel(selectedLevel);
+        initializeGame(selectedLevel);
+    };
+
+    const initializeGame = async (selectedLevel) => {
+        setGameState('loading');
+        setSynonymBox([]);
+        setAntonymBox([]);
+        setTimeExpired(false);
+
+        // precise level from argument or fall back to state
+        const currentLevel = selectedLevel || level;
+
+        try {
+            const data = await startGame({ token, level: currentLevel });
+            setGameData(data);
+            setAvailableWords(data.words || []);
+            setTimeLeft(data.time_limit || 60);
+            // Updating state again just to be safe
+            setLevel(data.level ? data.level.toUpperCase() : 'EASY');
+            startTimeRef.current = Date.now();
+            setGameState('playing');
+        } catch (err) {
+            setGameState('error');
+            console.error("Game Start Failed:", err);
+        }
+    };
+
+    const submitOnTimeUp = async () => {
+        setTimeExpired(true);
+        // Auto-calculate score with what's placed so far
+        handleSubmit();
+    };
+
+    /* ================= DRAG & DROP HANDLERS ================= */
+
+    const handleDragStart = (e, word) => {
+        if (timeExpired) return;
+        setDraggedWord(word);
+
+        // Add visual class to the ghost image or original item
+        e.dataTransfer.setData("wordId", word.id);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragEnd = () => {
+        setDraggedWord(null);
+        setDragOverBox(null);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        return false;
+    };
+
+    const handleDragEnter = (e, targetBox) => {
+        e.preventDefault();
+        setDragOverBox(targetBox);
+    };
+
+    const handleDrop = (e, targetBox) => {
+        e.preventDefault();
+        if (!draggedWord) return;
+
+        // Movement Logic
+        const word = draggedWord;
+
+        // 1. Remove from all existing boxes
+        setAvailableWords(prev => prev.filter(w => w.id !== word.id));
+        setSynonymBox(prev => prev.filter(w => w.id !== word.id));
+        setAntonymBox(prev => prev.filter(w => w.id !== word.id));
+
+        // 2. Add to target box
+        if (targetBox === "available") setAvailableWords(prev => [...prev, word]);
+        else if (targetBox === "synonyms") setSynonymBox(prev => [...prev, word]);
+        else if (targetBox === "antonyms") setAntonymBox(prev => [...prev, word]);
+
+        setDraggedWord(null);
+        setDragOverBox(null);
+    };
+
+    /* ================= TOUCH HANDLERS (Mobile Drag) ================= */
+
+    const handleTouchStart = (e, word) => {
+        if (timeExpired) return;
+        setTouchedWord(word);
+        setDraggedWord(word); // Visual feedback
+        touchStartPos.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY
+        };
+    };
+
+    const handleTouchMove = (e) => {
+        if (!touchedWord) return;
+        // CSS 'touch-action: none' prevents scrolling during drag
+
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Find which zone we're over
+        const zone = element?.closest('[data-zone]');
+        if (zone) {
+            const zoneName = zone.getAttribute('data-zone');
+            setDragOverBox(zoneName);
+        } else {
+            setDragOverBox(null);
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!touchedWord) return;
+
+        const touch = e.changedTouches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Find which zone we dropped on
+        const zone = element?.closest('[data-zone]');
+        if (zone) {
+            const targetBox = zone.getAttribute('data-zone');
+
+            // Move the word
+            const word = touchedWord;
+            setAvailableWords(prev => prev.filter(w => w.id !== word.id));
+            setSynonymBox(prev => prev.filter(w => w.id !== word.id));
+            setAntonymBox(prev => prev.filter(w => w.id !== word.id));
+
+            if (targetBox === "available") setAvailableWords(prev => [...prev, word]);
+            else if (targetBox === "synonyms") setSynonymBox(prev => [...prev, word]);
+            else if (targetBox === "antonyms") setAntonymBox(prev => [...prev, word]);
+        }
+
+        // Reset
+        setTouchedWord(null);
+        setDraggedWord(null);
+        setDragOverBox(null);
+        touchStartPos.current = null;
+    };
+
+    /* ================= ACTIONS ================= */
+
+    const handleSubmit = async () => {
+        if (gameState !== 'playing' && !timeExpired) return;
+
+        setGameState('loading');
+
+        const timeTaken = gameData?.time_limit ? (gameData.time_limit - timeLeft) : 0;
+
+        const submissionData = {
+            token,
+            roundId: gameData?.score_id || gameData?.round_id, // Match backend keys
+            synonyms: synonymBox.map(w => w.word),
+            antonyms: antonymBox.map(w => w.word),
+            timeTaken,
+            level
+        };
+
+        try {
+            const res = await submitGame(submissionData);
+
+
+
+            // Navigate directly to React Result Page (where Certificate/Share works)
+            navigate('/result', {
+                state: {
+                    results: res,
+                    gameData,
+                    synonymBox,
+                    antonymBox
+                }
+            });
+        } catch (err) {
+            console.error("Submission Failed:", err);
+            // Navigate to result page even if API fails
+            navigate('/result', {
+                state: {
+                    results: { score: 0, total_correct: 0, time_bonus: 0 },
+                    gameData,
+                    synonymBox,
+                    antonymBox
+                }
+            });
+        }
+    };
+
+    const handlePlayAgain = () => {
+        initializeGame();
+    };
+
+    const handleExit = () => navigate('/home');
+
+    const handleCertificate = async () => {
+        if (certificateRef.current === null) return;
+        try {
+            const dataUrl = await toPng(certificateRef.current, { cacheBust: true });
+            const link = document.createElement('a');
+            link.download = `Sortonym_Certificate_${member?.name || 'Player'}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error('Failed to generate certificate:', err);
+        }
+    };
+
+    const handleShare = async () => {
+        if (resultsRef.current === null) return;
+        try {
+            const dataUrl = await toPng(resultsRef.current, { cacheBust: true });
+            // In a real mobile app, we'd use navigator.share
+            // For web, we'll download it
+            const link = document.createElement('a');
+            link.download = `My_Sortonym_Score.png`;
+            link.href = dataUrl;
+            link.click();
+            alert("Performance Summary saved! You can now share it.");
+        } catch (err) {
+            console.error('Failed to share results:', err);
+        }
+    };
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    /* Note: Result page now navigates to /result route */
+
+    if (gameState === 'error') {
+        return (
+            <div className="game-page error-mode" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '20px', background: '#f8fafc' }}>
+                <h2 style={{ color: '#ef4444' }}>Oops! Failed to load game.</h2>
+                <p style={{ color: '#64748b' }}>Check your connection or try again.</p>
+                <button className="btn btn-submit" style={{ width: '200px' }} onClick={initializeGame}>Try Again</button>
+                <button className="btn btn-exit" style={{ width: '200px' }} onClick={handleExit}>Back to Home</button>
+            </div>
+        );
+    }
+
+
+    if (gameState === 'level-selection') {
+        return (
+            <div className="game-page level-selection-mode" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100vh',
+                background: '#f8fafc',
+                padding: '20px',
+                fontFamily: "'Outfit', sans-serif"
+            }}>
+                <h1 style={{
+                    color: '#1e293b',
+                    fontSize: '2rem',
+                    marginBottom: '10px',
+                    fontWeight: '900'
+                }}>Select Difficulty</h1>
+                <p style={{ color: '#64748b', marginBottom: '30px' }}>Choose your challenge level</p>
+
+                <div className="level-cards" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {/* EASY LEVEL */}
+                    <div
+                        onClick={() => handleLevelSelect('EASY')}
+                        style={{
+                            background: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            width: '160px',
+                            cursor: 'pointer',
+                            border: '2px solid #e2e8f0',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🌱</div>
+                        <h3 style={{ color: '#10b981', fontWeight: '800', marginBottom: '8px' }}>EASY</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
+                            Relaxed Time<br />
+                            Fewer Words<br />
+                            <strong>1.0x Score</strong>
+                        </p>
+                    </div>
+
+                    {/* MEDIUM LEVEL */}
+                    <div
+                        onClick={() => handleLevelSelect('MEDIUM')}
+                        style={{
+                            background: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            width: '160px',
+                            cursor: 'pointer',
+                            border: '2px solid #e2e8f0',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>⚖️</div>
+                        <h3 style={{ color: '#3b82f6', fontWeight: '800', marginBottom: '8px' }}>MEDIUM</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
+                            Balanced<br />
+                            Standard Words<br />
+                            <strong>1.2x Score</strong>
+                        </p>
+                    </div>
+
+                    {/* HARD LEVEL */}
+                    <div
+                        onClick={() => handleLevelSelect('HARD')}
+                        style={{
+                            background: 'white',
+                            padding: '24px',
+                            borderRadius: '16px',
+                            width: '160px',
+                            cursor: 'pointer',
+                            border: '2px solid #e2e8f0',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                    >
+                        <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔥</div>
+                        <h3 style={{ color: '#ef4444', fontWeight: '800', marginBottom: '8px' }}>HARD</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
+                            Fast Paced<br />
+                            Trickier Words<br />
+                            <strong>1.5x Score</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (gameState === 'loading') {
+        return (
+            <div className="game-page loading-mode" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc' }}>
+                <div className="loader">Loading Challenge...</div>
+                <p style={{ marginTop: '10px', color: '#64748b' }}>Getting your words ready...</p>
+            </div>
+        );
+    }
+
+    /* ================= GAME UI (Playing Mode) ================= */
+
+    return (
+        <div className="game-page playing-mode">
+
+            <header className="game-header-compact">
+                <div className="header-player">
+                    <i className="bi bi-person-fill"></i> {member?.name}
+                </div>
+                <Timer timeLeft={timeLeft} formatTime={formatTime} />
+                <div className="header-level">
+                    Lvl: {level}
+                </div>
+            </header>
+
+            <div className="anchor-word-section">
+                <span className="anchor-label">SORT FOR:</span>
+                <h1 className="anchor-word-text">{gameData?.anchor_word}</h1>
+            </div>
+
+            <main className="game-board">
+                <div className="game-play-area" key={startTimeRef.current || 'initial-game'}>
+
+                    <div className="target-zones-container">
+                        <TargetZone
+                            title="Synonyms"
+                            words={synonymBox}
+                            boxKey="synonyms"
+                            onDragOver={handleDragOver}
+                            onDragEnter={handleDragEnter}
+                            onDrop={handleDrop}
+                            dragOverBox={dragOverBox}
+                            draggedWord={draggedWord}
+                            handleDragStart={handleDragStart}
+                            handleDragEnd={handleDragEnd}
+                            isTimeExpired={timeExpired}
+                            handleTouchStart={handleTouchStart}
+                            handleTouchMove={handleTouchMove}
+                            handleTouchEnd={handleTouchEnd}
+                        />
+
+                        <TargetZone
+                            title="Antonyms"
+                            words={antonymBox}
+                            boxKey="antonyms"
+                            onDragOver={handleDragOver}
+                            onDragEnter={handleDragEnter}
+                            onDrop={handleDrop}
+                            dragOverBox={dragOverBox}
+                            draggedWord={draggedWord}
+                            handleDragStart={handleDragStart}
+                            handleDragEnd={handleDragEnd}
+                            isTimeExpired={timeExpired}
+                            handleTouchStart={handleTouchStart}
+                            handleTouchMove={handleTouchMove}
+                            handleTouchEnd={handleTouchEnd}
+                        />
+                    </div>
+
+                    <div className="source-zone-container">
+                        <div
+                            className={`source-pool ${dragOverBox === 'available' ? 'drag-over' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDragEnter={(e) => handleDragEnter(e, "available")}
+                            onDrop={(e) => handleDrop(e, "available")}
+                            data-zone="available"
+                        >
+                            {availableWords.map((word) => (
+                                <WordTile
+                                    key={word.id}
+                                    word={word}
+                                    isDragging={draggedWord?.id === word.id}
+                                    onDragStart={handleDragStart}
+                                    onDragEnd={handleDragEnd}
+                                    onTouchStart={handleTouchStart}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                </div>
+
+                <footer className="game-footer-controls">
+                    <GameButton
+                        label="Submit"
+                        onClick={handleSubmit}
+                        disabled={timeExpired || synonymBox.length + antonymBox.length === 0}
+                        variant="submit"
+                    />
+                    <GameButton
+                        label="Exit"
+                        onClick={handleExit}
+                        variant="exit"
+                    />
+                </footer>
+            </main>
+        </div>
+    );
+}
+
+export default GamePage;
