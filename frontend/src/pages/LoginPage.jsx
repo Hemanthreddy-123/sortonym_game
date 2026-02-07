@@ -6,17 +6,11 @@ import logo from '../assets/zdotapps.png'
 import emailIcon from '../assets/email_icon.png'
 import whatsappIcon from '../assets/whatsapp_icon.png'
 import './LoginPage.css'
-<<<<<<< HEAD
 import { useTheme } from '../hooks/useTheme'
 
 function LoginPage() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-=======
-
-function LoginPage() {
-  const navigate = useNavigate()
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
   const { signIn, signInWithOtp, status, user } = useAuth()
   const [mode, setMode] = useState('login')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -177,16 +171,18 @@ function LoginPage() {
 
   return (
     <div className="page-wrapper">
-<<<<<<< HEAD
+      <div className="game-grid"></div>
       <button className="theme-toggle-login" onClick={toggleTheme}>
         {theme === 'light' ? <i className="bi bi-moon-fill" /> : <i className="bi bi-sun-fill" />}
       </button>
-=======
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
       <div className="glass-panel">
         <div className="glass-content">
           <div className="logo">
             <img src={logo} alt="ZDrive" height="120" />
+          </div>
+
+          <div className="sign-in-title">
+            <h2>Sign In</h2>
           </div>
 
           {mode === 'login' ? (
@@ -222,14 +218,6 @@ function LoginPage() {
                   disabled={submitting}
                 >
                   <img src={emailIcon} alt="Email" />
-                </button>
-                <button
-                  type="button"
-                  className="key-icon"
-                  onClick={() => requestOtp('whatsapp')}
-                  disabled={submitting}
-                >
-                  <img src={whatsappIcon} alt="WhatsApp" />
                 </button>
               </div>
 
@@ -459,8 +447,4 @@ function LoginPage() {
   )
 }
 
-<<<<<<< HEAD
 export default LoginPage
-=======
-export default LoginPage
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862

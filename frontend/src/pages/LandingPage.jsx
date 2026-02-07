@@ -73,12 +73,23 @@ function LandingPage() {
         <div className="landing-container">
           <div className="topbar-inner">
             <div className="topbar-brand">
-              <i className="bi bi-intersect"></i>
+              <div className="brand-logo-img">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="32" height="32" rx="8" fill="#00A63F" />
+                  <path d="M16 8L24 16L16 24L8 16L16 8Z" fill="white" />
+                </svg>
+              </div>
               <span className="topbar-logo-text">Sortonym Challenge</span>
             </div>
 
             <div className="topbar-right">
-
+              <button
+                className="theme-toggle-btn"
+                onClick={toggleTheme}
+                aria-label="Toggle Theme"
+              >
+                {theme === 'light' ? <i className="bi bi-moon"></i> : <i className="bi bi-sun-fill"></i>}
+              </button>
 
               <div className="dropdown" ref={menuRef}>
                 <button
@@ -136,63 +147,96 @@ function LandingPage() {
                   </li>
                 </ul>
               </div>
-
-              <button
-                className="theme-toggle-btn"
-                onClick={toggleTheme}
-                aria-label="Toggle Theme"
-              >
-                {theme === 'light' ? <i className="bi bi-moon-fill"></i> : <i className="bi bi-sun-fill"></i>}
-              </button>
             </div>
           </div>
         </div>
       </header>
 
       <main className="landing-center">
+        {/* --- Hero Section --- */}
         <div className="landing-container">
-          <div className="center-content-wrapper">
-            {/* Hero Section */}
-            <section className="hero-section">
+          <section className="hero-section">
+            <div className="hero-badge">
+              <i className="bi bi-lightning-charge"></i> Fast-Paced Word Challenge
+            </div>
 
-              <p className="landing-subtitle">Master your vocabulary! Sort synonyms and antonyms against the clock in this fast-paced word challenge.</p>
+            <h1 className="landing-title">
+              Master Your <span className="text-highlight">Vocabulary</span>
+            </h1>
 
+            <p className="landing-subtitle">
+              Sort synonyms and antonyms against the clock in this fast-paced word challenge.
+              Test your skills and climb the leaderboard!
+            </p>
 
+            <div className="landing-actions">
+              <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
+                <i className="bi bi-play-fill me-2"></i> START CHALLENGE
+              </button>
+              <button className="btn btn-outline-green btn-lg" onClick={() => navigate('/leaderboard')}>
+                <i className="bi bi-trophy me-2"></i> LEADERBOARD
+              </button>
+            </div>
 
-              <div className="landing-actions">
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
-                  <i className="bi bi-play me-2"></i> Start Challenge
-                </button>
-                <button className="btn btn-secondary btn-lg" onClick={() => navigate('/leaderboard')}>
-                  <i className="bi bi-trophy me-2"></i> Leaderboard
-                </button>
+            <div className="hero-stats">
+              <div className="stat-card">
+                <span className="stat-value">10K+</span>
+                <span className="stat-label">Players</span>
               </div>
-            </section>
+              <div className="stat-card">
+                <span className="stat-value">50K+</span>
+                <span className="stat-label">Words</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-value">99%</span>
+                <span className="stat-label">Fun Rate</span>
+              </div>
+            </div>
+          </section>
+        </div>
 
-            {/* Instructions Strip */}
-            <section className="how-to-play-grid">
+        {/* --- Protocol Section (Full Width Outer) --- */}
+        <div className="protocol-bg-outer">
+          <div className="landing-container">
+            <section className="protocol-section">
               <div className="section-header">
-                <h5>Game Protocol</h5>
+                <h2>Game Protocol</h2>
+                <p className="section-subtitle">Four simple steps to vocabulary mastery</p>
               </div>
 
-              <div className="grid-instructions">
-                <div className="instruction-card">
-                  <div className="card-icon"><i className="bi bi-eye"></i></div>
+              <div className="protocol-grid">
+                <div className="protocol-card">
+                  <div className="card-top">
+                    <div className="card-icon"><i className="bi bi-eye"></i></div>
+                    <span className="bg-number">1</span>
+                  </div>
                   <h3>Observe</h3>
                   <p>Study the target word and the options available.</p>
                 </div>
-                <div className="instruction-card">
-                  <div className="card-icon"><i className="bi bi-box-arrow-in-down-left"></i></div>
+
+                <div className="protocol-card">
+                  <div className="card-top">
+                    <div className="card-icon"><i className="bi bi-bullseye"></i></div>
+                    <span className="bg-number">2</span>
+                  </div>
                   <h3>Classify</h3>
                   <p>Drag options to Synonym or Antonym boxes.</p>
                 </div>
-                <div className="instruction-card">
-                  <div className="card-icon"><i className="bi bi-lightning-charge"></i></div>
+
+                <div className="protocol-card">
+                  <div className="card-top">
+                    <div className="card-icon"><i className="bi bi-lightning"></i></div>
+                    <span className="bg-number">3</span>
+                  </div>
                   <h3>Acceleration</h3>
                   <p>Maintain speed to maximize your bonus points.</p>
                 </div>
-                <div className="instruction-card">
-                  <div className="card-icon"><i className="bi bi-award"></i></div>
+
+                <div className="protocol-card">
+                  <div className="card-top">
+                    <div className="card-icon"><i className="bi bi-graph-up-arrow"></i></div>
+                    <span className="bg-number">4</span>
+                  </div>
                   <h3>Ascend</h3>
                   <p>Climb the ranks and validate your expertise.</p>
                 </div>
@@ -200,9 +244,48 @@ function LandingPage() {
             </section>
           </div>
         </div>
+
+        {/* --- Benefits & CTA --- */}
+        <div className="landing-container">
+          <section className="benefits-section">
+            <div className="benefits-grid">
+              <div className="benefit-card">
+                <div className="benefit-icon-box"><i className="bi bi-lightning-charge"></i></div>
+                <h3>Lightning Fast</h3>
+                <p>Quick rounds keep you engaged and test your reflexes along with vocabulary.</p>
+              </div>
+
+              <div className="benefit-card">
+                <div className="benefit-icon-box"><i className="bi bi-trophy"></i></div>
+                <h3>Competitive Rankings</h3>
+                <p>Climb the global leaderboard and prove your vocabulary mastery.</p>
+              </div>
+
+              <div className="benefit-card">
+                <div className="benefit-icon-box"><i className="bi bi-bullseye"></i></div>
+                <h3>Skill Building</h3>
+                <p>Expand your vocabulary while having fun with challenging word combinations.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="cta-section">
+            <div className="cta-card">
+              <h2>Ready to Challenge Yourself?</h2>
+              <p>Join thousands of players improving their vocabulary skills</p>
+              <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
+                <i className="bi bi-play-fill me-2"></i> Start Playing Now
+              </button>
+            </div>
+          </section>
+
+          <footer className="landing-footer">
+            <p>© 2026 Sortonym Challenge. Master your vocabulary, one word at a time.</p>
+          </footer>
+        </div>
       </main>
     </div>
   )
 }
 
-export default LandingPage
+export default LandingPage;

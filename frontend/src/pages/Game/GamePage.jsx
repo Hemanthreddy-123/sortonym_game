@@ -341,7 +341,7 @@ function GamePage() {
                             background: 'white',
                             padding: '24px',
                             borderRadius: '16px',
-                            width: '160px',
+                            width: '200px',
                             cursor: 'pointer',
                             border: '2px solid #e2e8f0',
                             textAlign: 'center',
@@ -352,9 +352,9 @@ function GamePage() {
                         <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🌱</div>
                         <h3 style={{ color: '#10b981', fontWeight: '800', marginBottom: '8px' }}>EASY</h3>
                         <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
-                            Relaxed Time<br />
-                            Fewer Words<br />
-                            <strong>1.0x Score</strong>
+                            Simple words<br />
+                            More time<br />
+                            <strong>Beginner-friendly</strong>
                         </p>
                     </div>
 
@@ -365,7 +365,7 @@ function GamePage() {
                             background: 'white',
                             padding: '24px',
                             borderRadius: '16px',
-                            width: '160px',
+                            width: '200px',
                             cursor: 'pointer',
                             border: '2px solid #e2e8f0',
                             textAlign: 'center',
@@ -376,9 +376,9 @@ function GamePage() {
                         <div style={{ fontSize: '2rem', marginBottom: '10px' }}>⚖️</div>
                         <h3 style={{ color: '#3b82f6', fontWeight: '800', marginBottom: '8px' }}>MEDIUM</h3>
                         <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
-                            Balanced<br />
-                            Standard Words<br />
-                            <strong>1.2x Score</strong>
+                            Moderate vocabulary<br />
+                            Balanced timing<br />
+                            <strong>Intermediate challenge</strong>
                         </p>
                     </div>
 
@@ -389,7 +389,7 @@ function GamePage() {
                             background: 'white',
                             padding: '24px',
                             borderRadius: '16px',
-                            width: '160px',
+                            width: '200px',
                             cursor: 'pointer',
                             border: '2px solid #e2e8f0',
                             textAlign: 'center',
@@ -400,9 +400,9 @@ function GamePage() {
                         <div style={{ fontSize: '2rem', marginBottom: '10px' }}>🔥</div>
                         <h3 style={{ color: '#ef4444', fontWeight: '800', marginBottom: '8px' }}>HARD</h3>
                         <p style={{ fontSize: '0.8rem', color: '#64748b', lineHeight: '1.4' }}>
-                            Fast Paced<br />
-                            Trickier Words<br />
-                            <strong>1.5x Score</strong>
+                            Advanced words<br />
+                            Less time<br />
+                            <strong>High scoring potential</strong>
                         </p>
                     </div>
                 </div>
@@ -434,14 +434,105 @@ function GamePage() {
                 </div>
             </header>
 
-            <div className="anchor-word-section">
-                <span className="anchor-label">SORT FOR:</span>
-                <h1 className="anchor-word-text">{gameData?.anchor_word}</h1>
-            </div>
-
             <main className="game-board">
                 <div className="game-play-area" key={startTimeRef.current || 'initial-game'}>
 
+                    {/* LEFT COLUMN - Word Bank */}
+                    <div className="source-zone-container">
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '16px',
+                            paddingBottom: '12px',
+                            borderBottom: '1px solid rgba(0,0,0,0.05)'
+                        }}>
+                            <h3 style={{
+                                fontSize: '14px',
+                                fontWeight: '800',
+                                textTransform: 'uppercase',
+                                color: 'var(--brand-black)',
+                                margin: 0
+                            }}>Word Bank</h3>
+                            <span style={{
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                color: 'var(--slate-gray)'
+                            }}>{availableWords.length} words</span>
+                        </div>
+                        <div
+                            className={`source-pool ${dragOverBox === 'available' ? 'drag-over' : ''}`}
+                            onDragOver={handleDragOver}
+                            onDragEnter={(e) => handleDragEnter(e, "available")}
+                            onDrop={(e) => handleDrop(e, "available")}
+                            data-zone="available"
+                        >
+                            {availableWords.map((word) => (
+                                <WordTile
+                                    key={word.id}
+                                    word={word}
+                                    isDragging={draggedWord?.id === word.id}
+                                    onDragStart={handleDragStart}
+                                    onDragEnd={handleDragEnd}
+                                    onTouchStart={handleTouchStart}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* CENTER COLUMN - Anchor Word */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '10px'
+                    }}>
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            background: 'var(--brand-green)',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '16px',
+                            boxShadow: '0 6px 16px rgba(0, 166, 63, 0.2)'
+                        }}>
+                            <i className="bi bi-lightbulb-fill" style={{
+                                fontSize: '32px',
+                                color: 'white'
+                            }}></i>
+                        </div>
+                        <span style={{
+                            fontSize: '11px',
+                            color: 'var(--slate-gray)',
+                            fontWeight: '700',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1.2px',
+                            marginBottom: '8px'
+                        }}>Target Word</span>
+                        <h1 style={{
+                            fontSize: '40px',
+                            fontWeight: '900',
+                            color: 'var(--brand-black)',
+                            margin: '0 0 12px 0',
+                            textTransform: 'uppercase',
+                            letterSpacing: '-1px',
+                            textAlign: 'center'
+                        }}>{gameData?.anchor_word}</h1>
+                        <p style={{
+                            fontSize: '12px',
+                            color: 'var(--slate-gray)',
+                            textAlign: 'center',
+                            maxWidth: '240px',
+                            lineHeight: '1.4'
+                        }}>Find synonyms and antonyms for this word</p>
+                    </div>
+
+                    {/* RIGHT COLUMN - Drop Zones (Stacked) */}
                     <div className="target-zones-container">
                         <TargetZone
                             title="Synonyms"
@@ -478,46 +569,24 @@ function GamePage() {
                         />
                     </div>
 
-                    <div className="source-zone-container">
-                        <div
-                            className={`source-pool ${dragOverBox === 'available' ? 'drag-over' : ''}`}
-                            onDragOver={handleDragOver}
-                            onDragEnter={(e) => handleDragEnter(e, "available")}
-                            onDrop={(e) => handleDrop(e, "available")}
-                            data-zone="available"
-                        >
-                            {availableWords.map((word) => (
-                                <WordTile
-                                    key={word.id}
-                                    word={word}
-                                    isDragging={draggedWord?.id === word.id}
-                                    onDragStart={handleDragStart}
-                                    onDragEnd={handleDragEnd}
-                                    onTouchStart={handleTouchStart}
-                                    onTouchMove={handleTouchMove}
-                                    onTouchEnd={handleTouchEnd}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
                 </div>
-
-                <footer className="game-footer-controls">
-                    <GameButton
-                        label="Submit"
-                        onClick={handleSubmit}
-                        disabled={timeExpired || synonymBox.length + antonymBox.length === 0}
-                        variant="submit"
-                    />
-                    <GameButton
-                        label="Exit"
-                        onClick={handleExit}
-                        variant="exit"
-                    />
-                </footer>
             </main>
+
+            <footer className="game-footer-controls">
+                <GameButton
+                    label="Submit"
+                    onClick={handleSubmit}
+                    disabled={timeExpired || synonymBox.length + antonymBox.length === 0}
+                    variant="submit"
+                />
+                <GameButton
+                    label="Exit"
+                    onClick={handleExit}
+                    variant="exit"
+                />
+            </footer>
         </div>
+
     );
 }
 

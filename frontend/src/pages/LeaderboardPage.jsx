@@ -59,7 +59,7 @@ function LeaderboardPage() {
       {/* 2. Controls / Toggle (Styled as tech bars) */}
       <div className="game-lb-controls">
         <button className="game-btn-back" onClick={() => navigate('/home')}>
-          <i className="bi bi-arrow-left"></i> BACK
+          <i className="bi bi-box-arrow-right"></i> EXIT
         </button>
 
         <button className="theme-toggle-lb" onClick={toggleTheme}>
@@ -114,35 +114,37 @@ function LeaderboardPage() {
 
           return (
             <div key={index} className={`game-lb-row ${isMe ? 'row-me' : ''}`}>
+              <div className="lb-left-group">
+                {/* Block 1: Trophy */}
+                <div className="lb-block block-trophy">
+                  <div className="skew-fix">{trophyIcon}</div>
+                </div>
 
-              {/* Block 1: Trophy */}
-              <div className="lb-block block-trophy">
-                <div className="skew-fix">{trophyIcon}</div>
-              </div>
+                {/* Block 2: Rank */}
+                <div className="lb-block block-rank">
+                  <div className="skew-fix">{rank < 10 ? `0${rank}` : rank}</div>
+                </div>
 
-              {/* Block 2: Rank */}
-              <div className="lb-block block-rank">
-                <div className="skew-fix">{rank < 10 ? `0${rank}` : rank}</div>
-              </div>
-
-              {/* Block 3: Name (Wide) */}
-              <div className="lb-block block-name">
-                <div className="skew-fix name-content">
-                  <i className="bi bi-person-circle"></i>
-                  <span>{displayName.toUpperCase()}</span>
+                {/* Block 3: Name (Wide) */}
+                <div className="lb-block block-name">
+                  <div className="skew-fix name-content">
+                    <i className="bi bi-person-circle"></i>
+                    <span>{displayName.toUpperCase()}</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Block 4: Score */}
-              <div className="lb-block block-score">
-                <div className="skew-fix">{formatScore(entry.score)}</div>
-              </div>
+              <div className="lb-right-group">
+                {/* Block 4: Score */}
+                <div className="lb-block block-score">
+                  <div className="skew-fix">{formatScore(entry.score)}</div>
+                </div>
 
-              {/* Block 5: Time */}
-              <div className="lb-block block-time">
-                <div className="skew-fix">{formatTime(entry.time_taken)}s</div>
+                {/* Block 5: Time */}
+                <div className="lb-block block-time">
+                  <div className="skew-fix">{formatTime(entry.time_taken)}s</div>
+                </div>
               </div>
-
             </div>
           )
         })}

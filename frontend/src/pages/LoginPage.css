@@ -1,412 +1,502 @@
-/* -------------------------------
-   Page Layout
--------------------------------- */
+/* =====================================================
+   SORTONYM GAME: ADVANCED GAMING LOGIN PAGE
+   Gaming Theme: Cyberpunk/Futuristic Design
+===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --game-primary: #00FF88;
+    --game-secondary: #FF006E;
+    --game-accent: #FFBE0B;
+    --game-dark: #0A0E27;
+    --game-darker: #060818;
+    --game-light: #1A1F3A;
+    --game-text: #FFFFFF;
+    --game-text-dim: #B8BCC8;
+    --game-border: #2A3456;
+    --game-glow: rgba(0, 255, 136, 0.5);
+    --game-danger: #FF4757;
+}
+
 .page-wrapper {
     width: 100%;
-<<<<<<< HEAD
     height: 100vh;
-    /* Changed from min-height so we can scroll internally */
-    overflow-y: auto;
-    /* Enable scrolling */
-=======
-    min-height: 100vh;
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-    background: url("../assets/hackathon_bg.webp") center / cover no-repeat;
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* -------------------------------
-   Glass Panel
--------------------------------- */
-.glass-panel {
-    width: clamp(320px, 34vw, 520px);
-    min-height: 100vh;
-    padding: clamp(20px, 3vw, 40px);
-    background: rgba(41, 40, 40, 0.66);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(6px);
-    border-left: 1px solid var(--primary-subtle);
     display: flex;
     justify-content: center;
     align-items: center;
+    background: linear-gradient(135deg, var(--game-darker) 0%, var(--game-dark) 50%, var(--game-light) 100%);
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow: hidden;
 }
 
-/* -------------------------------
-   Glass Content (Centered)
--------------------------------- */
+.page-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 80%, var(--game-secondary) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--game-primary) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, var(--game-accent) 0%, transparent 50%);
+    opacity: 0.1;
+    animation: pulse 8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.2; }
+}
+
+.game-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-move 20s linear infinite;
+}
+
+@keyframes grid-move {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(50px, 50px); }
+}
+
+.glass-panel {
+    width: clamp(420px, 40vw, 550px);
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.95) 0%, rgba(10, 14, 39, 0.95) 100%);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    padding: 60px 50px;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.3),
+        0 0 100px rgba(0, 255, 136, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    overflow-y: auto;
+    position: relative;
+    z-index: 10;
+}
+
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, rgba(0, 255, 136, 0.05) 50%, transparent 100%);
+    border-radius: 24px;
+    pointer-events: none;
+}
+
 .glass-content {
     width: 100%;
-    max-width: 420px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
-/* -------------------------------
-   Logo
--------------------------------- */
+/* --- Game Logo --- */
 .logo {
-<<<<<<< HEAD
-    margin-bottom: 20px;
-=======
-    margin-bottom: 36px;
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-    display: flex;
-    align-items: center;
-    justify-content: center
-}
-
-/* -------------------------------
-   Typography
--------------------------------- */
-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--light-4);
-    margin-bottom: 8px;
-    display: block;
-}
-
-/* -------------------------------
-   Form Fields
--------------------------------- */
-.field {
-<<<<<<< HEAD
-    margin-bottom: 16px;
-=======
-    margin-bottom: 24px;
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-.field input {
-    width: 100%;
-    padding: 12px 14px;
-    font-size: 16px;
-    font-family: 'Mulish', sans-serif;
-    border-radius: 4px;
-    border: 1px solid var(--light-3);
-    background: transparent;
-    color: var(--light-1);
-}
-
-.field select {
-    width: 100%;
-    padding: 12px 14px;
-    font-size: 16px;
-    font-family: 'Mulish', sans-serif;
-    border-radius: 4px;
-    border: 1px solid var(--light-3);
-    background: transparent;
-    color: var(--light-1);
-}
-
-.field input::placeholder {
-    color: var(--dark-3);
-}
-
-.field input:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px rgba(51, 119, 255, 0.15);
-}
-
-/* -------------------------------
-   Get Key Section
--------------------------------- */
-.get-key {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: var(--dark-2);
-<<<<<<< HEAD
-    margin-bottom: 12px;
-=======
-    margin-bottom: 16px;
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-.key-icon {
-    padding: 0;
-    border: none;
-    background: transparent;
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.key-icon img {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    display: block;
-}
-
-/* -------------------------------
-   OTP Inputs
--------------------------------- */
-.otp-boxes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-top: 8px;
-}
-
-.otp-boxes input {
-    width: 44px;
-    height: 44px;
     text-align: center;
-    font-size: 16px;
-    border-radius: 4px;
-    border: 1px solid var(--light-3);
-}
-
-.otp-boxes input:focus {
-    border-color: var(--primary);
-}
-
-/* -------------------------------
-   OR Divider Text
--------------------------------- */
-.or-text {
-    text-align: center;
-    font-size: 12px;
-    color: var(--light-2);
-<<<<<<< HEAD
-    margin: 16px 0;
-=======
-    margin: 24px 0;
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-/* -------------------------------
-   Password Field
--------------------------------- */
-.password {
+    margin-bottom: 30px;
     position: relative;
 }
 
+.logo img {
+    max-width: 200px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+}
+
+/* --- Game Title --- */
+.sign-in-title {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.sign-in-title h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--game-text);
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px var(--game-glow);
+    position: relative;
+}
+
+.sign-in-title h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--game-primary), transparent);
+    border-radius: 2px;
+}
+
+/* --- Game Form Fields --- */
+.field {
+    margin-bottom: 28px;
+    position: relative;
+}
+
+.field label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--game-text-dim);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.field input,
+.field select {
+    width: 100%;
+    padding: 16px 20px;
+    border: 2px solid var(--game-border);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+    outline: none;
+    background: rgba(26, 31, 58, 0.6);
+    color: var(--game-text);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.field input::placeholder {
+    color: var(--game-text-dim);
+    opacity: 0.7;
+}
+
+.field input:focus,
+.field select:focus {
+    border-color: var(--game-primary);
+    background: rgba(26, 31, 58, 0.8);
+    box-shadow: 0 0 0 3px var(--game-glow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+/* --- Game Get Key Section --- */
+.get-key {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: rgba(26, 31, 58, 0.4);
+    border: 1px solid var(--game-border);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.get-key span {
+    font-weight: 600;
+    color: var(--game-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.key-icon {
+    background: linear-gradient(135deg, var(--game-primary), var(--game-secondary));
+    border: 2px solid transparent;
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.key-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.key-icon:hover::before {
+    left: 100%;
+}
+
+.key-icon:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+    border-color: var(--game-primary);
+}
+
+.key-icon img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
+}
+
+/* --- Game OTP Boxes --- */
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+}
+
+.otp-boxes input {
+    padding: 16px 0;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.4rem;
+    background: rgba(26, 31, 58, 0.6);
+    border: 2px solid var(--game-border);
+    border-radius: 12px;
+    color: var(--game-text);
+    font-family: 'Orbitron', sans-serif;
+    transition: all 0.3s;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.otp-boxes input:focus {
+    border-color: var(--game-primary);
+    background: rgba(26, 31, 58, 0.8);
+    box-shadow: 0 0 0 3px var(--game-glow);
+    transform: translateY(-2px);
+}
+
+/* --- Game Divider --- */
+.or-text {
+    text-align: center;
+    color: var(--game-text-dim);
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 30px 0;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.or-text::before,
+.or-text::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 35%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--game-border), transparent);
+}
+
+.or-text::before {
+    left: 0;
+}
+
+.or-text::after {
+    right: 0;
+}
+
+/* --- Game Password / Forgot --- */
 .password-input {
     position: relative;
 }
 
-.password-control {
-    padding-right: 44px;
-}
-
 .password-toggle {
     position: absolute;
-    right: 10px;
+    right: 15px;
     top: 50%;
     transform: translateY(-50%);
-    width: 34px;
-    height: 34px;
+    background: none;
     border: none;
-    background: transparent;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.75);
     cursor: pointer;
+    color: var(--game-text-dim);
+    font-size: 1.3rem;
+    transition: all 0.3s;
+    padding: 5px;
 }
 
-.password-toggle:disabled {
-    cursor: default;
-    opacity: 0.6;
-}
-
-.password-toggle:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(51, 119, 255, 0.35);
-    border-radius: 6px;
-}
-
-.password-toggle i {
-    font-size: 18px;
-    line-height: 1;
-}
-
-.modal .form-label {
-    color: var(--dark-1);
+.password-toggle:hover {
+    color: var(--game-primary);
+    transform: translateY(-50%) scale(1.1);
 }
 
 .forgot-password-under {
-    display: block;
-    width: 100%;
-    text-align: right;
-    margin-top: 8px;
-    padding: 0;
+    background: none;
     border: none;
-    background: transparent;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--primary-light);
-    cursor: pointer;
-}
-
-.forgot-password-under:disabled {
-    cursor: default;
-    opacity: 0.6;
-}
-
-.create-account-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    color: var(--light-2);
-}
-
-.create-account-link {
-    padding: 0;
-    border: none;
-    background: transparent;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    color: var(--game-primary);
+    font-size: 0.8rem;
     font-weight: 600;
-    color: var(--primary-light);
     cursor: pointer;
+    margin-top: 10px;
+    float: right;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: 'Orbitron', sans-serif;
+    transition: all 0.3s;
 }
 
-.create-account-link:disabled {
-    cursor: default;
-    opacity: 0.6;
+.forgot-password-under:hover {
+    color: var(--game-secondary);
+    text-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
 }
 
-/* -------------------------------
-   Login Button
--------------------------------- */
+/* --- Game Login Button --- */
 .login-btn {
     width: 100%;
-    padding: 14px 32px;
-    font-size: 16px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    color: #fff;
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--game-primary), var(--game-secondary));
+    color: var(--game-text);
     border: none;
-    border-radius: 6px;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
     cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    margin-top: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+}
+
+.login-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.login-btn:hover::before {
+    left: 100%;
 }
 
 .login-btn:hover {
-    background: var(--primary-dark);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(0, 255, 136, 0.4);
+    background: linear-gradient(135deg, var(--game-secondary), var(--game-primary));
 }
 
-.login-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(51, 119, 255, 0.3);
+.login-btn:active {
+    transform: translateY(-1px) scale(1.01);
+    font-size: 0.875rem;
+    color: var(--login-slate);
 }
 
-/* -------------------------------
-   Create Account
--------------------------------- */
-.create-account {
-    margin-top: 24px;
-    text-align: center;
-    font-size: 14px;
-    color: var(--dark-2);
+.create-account-link {
+    background: none;
+    border: none;
+    color: var(--login-green);
+    font-weight: 700;
     cursor: pointer;
+    margin-left: 4px;
 }
 
-/* -------------------------------
-   Responsive
--------------------------------- */
-@media (max-width: 768px) {
-    .glass-panel {
-        width: 100%;
-        border-left: none;
-    }
+/* --- Game Theme Toggle --- */
+.theme-toggle-login {
+    position: absolute;
+    top: 32px;
+    left: 32px;
+    background: linear-gradient(135deg, rgba(26, 31, 58, 0.9), rgba(10, 14, 39, 0.9));
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--game-border);
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    transition: all 0.3s;
+    color: var(--game-text-dim);
+    font-size: 1.2rem;
+}
 
+.theme-toggle-login:hover {
+    border-color: var(--game-primary);
+    color: var(--game-primary);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(0, 255, 136, 0.3);
+}
+
+/* --- Dark Mode --- */
+body.dark-mode .glass-panel {
+    background: #0c0f14;
+}
+
+body.dark-mode .field label {
+    color: white;
+}
+
+body.dark-mode .field input,
+body.dark-mode .field select {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+body.dark-mode .field input:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--login-green);
+}
+
+body.dark-mode .get-key {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+body.dark-mode .key-icon {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .theme-toggle-login {
+    background: #1e293b;
+    color: white;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
     .page-wrapper {
         justify-content: center;
     }
 
-    .otp-boxes {
-        gap: 12px;
-    }
-}
-
-@media (max-width: 380px) {
     .glass-panel {
-        padding: 16px;
-    }
-
-    .otp-boxes {
-        gap: 10px;
-    }
-
-    .otp-boxes input {
-        width: 40px;
-        height: 40px;
+        width: 100%;
+        padding: 32px;
     }
 }
-<<<<<<< HEAD
-
-/* --- Theme Toggle --- */
-.theme-toggle-login {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: all 0.2s;
-    z-index: 100;
-}
-
-.theme-toggle-login:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: rotate(15deg);
-}
-
-/* --- Dark Mode Fixes --- */
-/* Unlock variables for Login Page specifically, as it uses Dark Glass always */
-body.dark-mode label,
-body.dark-mode .get-key,
-body.dark-mode .create-account,
-body.dark-mode .or-text {
-    color: #f8fafc;
-}
-
-body.dark-mode .field input,
-body.dark-mode .field select,
-body.dark-mode .otp-boxes input {
-    color: #f8fafc;
-    border-color: #475569;
-}
-
-body.dark-mode .field input::placeholder {
-    color: #94a3b8;
-}
-
-body.dark-mode .glass-panel {
-    background: rgba(15, 23, 42, 0.9);
-    border-left-color: #334155;
-}
-
-body.dark-mode .login-btn {
-    background: #3b82f6;
-    color: white;
-}
-
-body.dark-mode .login-btn:hover {
-    background: #2563eb;
-}
-=======
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862

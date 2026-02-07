@@ -1,5 +1,4 @@
 /* =====================================================
-<<<<<<< HEAD
    Finathon 2026 – UI Style Guideline
    Strictly following provided PDF
 ===================================================== */
@@ -16,50 +15,25 @@
 -------------------------------- */
 :root {
     /* --- Colors --- */
-=======
-   Finathon 2026 – Login Page Styles
-   Strictly following Style Guide
-===================================================== */
-
-/* -------------------------------
-   Fonts
--------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Mulish:wght@400;600&display=swap');
-
-/* -------------------------------
-   Design Tokens
--------------------------------- */
-:root {
-    /* Primary */
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
     --primary: #3377FF;
     --primary-dark: #2659BF;
     --primary-light: #99BBFF;
     --primary-subtle: #E3EDFF;
 
-<<<<<<< HEAD
     --success: #06C270;
     --info: #0063F7;
     --warning: #FFCC00;
     --error: #FF3B3B;
 
-=======
-    /* Dark */
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
     --dark-1: #3A3A3C;
     --dark-2: #6B7588;
     --dark-3: #8F90A6;
     --dark-4: #C7C9D9;
 
-<<<<<<< HEAD
-=======
-    /* Light */
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
     --light-1: #DDE5E9;
     --light-2: #EBEBF0;
     --light-3: #F2F2F5;
     --light-4: #FAFAFC;
-<<<<<<< HEAD
     --white: #FFFFFF;
 
     /* --- Typography --- */
@@ -115,13 +89,12 @@
 html,
 body,
 #root {
-    height: 100vh;
-    height: 100dvh;
-    width: 100vw;
+    width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
-    /* GLOBAL LOCK */
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* GLOBAL SCROLL ENABLED */
 }
 
 body {
@@ -134,7 +107,6 @@ body {
 }
 
 /* Headings */
-h1,
 h2,
 h3,
 h4,
@@ -146,7 +118,7 @@ h6,
     line-height: var(--lh-heading);
     font-weight: 700;
     /* Bold */
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-8);
 }
 
 h1 {
@@ -175,7 +147,7 @@ h6 {
 
 /* Body Text */
 p {
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-8);
     font-size: var(--text-body-sm);
     /* Default body size */
 }
@@ -184,31 +156,26 @@ p {
 label,
 .label {
     font-family: var(--font-body);
-    /* Labels usually share body font or heading font, guide implies hierarchy */
     font-size: var(--text-label-md);
     color: var(--dark-2);
     display: block;
     margin-bottom: 8px;
-    /* Custom spacing but close to space-1 */
 }
 
 /* -------------------------------
-   05. Buttons (Page 5)
+   05. Buttons
 -------------------------------- */
 button {
     font-family: var(--font-heading);
-    /* Buttons usually match headings/inter */
     cursor: pointer;
     border: none;
     transition: all 0.2s ease-in-out;
 }
 
-/* Button Sizes */
 .btn-sm {
     font-size: 14px;
     padding: 12px 24px;
     border-radius: 9999px;
-    /* Implied pill */
 }
 
 .btn-md {
@@ -223,7 +190,6 @@ button {
     border-radius: 9999px;
 }
 
-/* Button Colors */
 .btn-primary {
     background-color: var(--primary);
     color: #FFFFFF;
@@ -235,9 +201,7 @@ button {
 
 .btn-secondary {
     background-color: var(--light-2);
-    /* "Light grey background" */
     color: var(--dark-1);
-    /* "Dark text" */
 }
 
 .btn-secondary:hover {
@@ -253,14 +217,13 @@ button {
     background-color: var(--primary-subtle);
 }
 
-/* Disabled State */
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 /* -------------------------------
-   06. Input Fields (Page 6)
+   06. Input Fields
 -------------------------------- */
 input[type="text"],
 input[type="email"],
@@ -270,13 +233,10 @@ input[type="tel"],
 select {
     width: 100%;
     padding: 12px 14px;
-    /* Matches default assumption */
     font-family: var(--font-body);
     font-size: 16px;
     border: 1px solid var(--light-2);
-    /* Light border */
     border-radius: 8px;
-    /* Modern radius, style guide implies design */
     background-color: #FFFFFF;
     color: var(--dark-1);
     transition: all 0.2s;
@@ -301,606 +261,3 @@ input:disabled {
     background-color: var(--light-3);
     cursor: not-allowed;
 }
-
-
-/* -------------------------------
-   Compat / Legacy Classes (Mapped to New System)
--------------------------------- */
-=======
-
-    --error: #FF3B3B;
-    --success: #06C270;
-    --warning: #FFCC00;
-    --info: #0066F7;
-    --muted: #6B7588;
-    --light: #DDE5E9;
-    --dark: #3A3A3C;
-    --white: #FFFFFF;
-    --black: #000000;
-}
-
-/* -------------------------------
-   Base
--------------------------------- */
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: 'Mulish', sans-serif;
-    background: var(--light-1);
-}
-
-html,
-body {
-    height: 100%;
-}
-
-body.no-scroll {
-    overflow: hidden;
-}
-
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-.landing-shell {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-<<<<<<< HEAD
-    background-color: var(--light-4);
-=======
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-.landing-topbar {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    left: 16px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 12px;
-    z-index: 10;
-}
-
-<<<<<<< HEAD
-.landing-userbtn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--white);
-    /* White border for avatar */
-    background: var(--light-2);
-    /* Fallback */
-=======
-.landing-team {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--dark-1);
-    background: rgba(255, 255, 255, 0.75);
-    border: 1px solid var(--light-2);
-    padding: 8px 12px;
-    border-radius: 9999px;
-}
-
-.landing-userbtn {
-    width: 44px;
-    height: 44px;
-    border-radius: 9999px;
-    border: 1px solid var(--light-2);
-    background: rgba(255, 255, 255, 0.9);
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-<<<<<<< HEAD
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
-    /* For status dot */
-    padding: 0;
-    /* image fills it */
-}
-
-.landing-userbtn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: var(--primary-light);
-}
-
-.user-avatar-img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
-.user-status-indicator {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    background-color: var(--success);
-    border: 2px solid #FFFFFF;
-    border-radius: 50%;
-    box-sizing: content-box;
-    /* Ensure border doesn't shrink dot */
-=======
-}
-
-.landing-userbtn i {
-    font-size: 22px;
-    color: var(--dark-1);
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-.landing-center {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 24px;
-}
-
-.landing-title {
-<<<<<<< HEAD
-    font-family: var(--font-heading);
-    font-weight: 200;
-    /* Extra Light as per Guide Display 1 */
-    font-size: var(--text-display-lg);
-    line-height: var(--lh-heading);
-=======
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: clamp(24px, 4vw, 40px);
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-    color: var(--dark-1);
-}
-
-.landing-subtitle {
-<<<<<<< HEAD
-    font-family: var(--font-body);
-    font-weight: 400;
-    font-size: var(--text-body-lead);
-    /* 22px Lead Paragraph */
-    line-height: var(--lh-lead);
-    color: var(--dark-2);
-}
-
-.landing-username {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    color: var(--dark-1);
-    font-size: 16px;
-}
-
-.btn-edit-name {
-    background: none;
-    border: none;
-    padding: 2px;
-    color: var(--primary);
-    font-size: 14px;
-    opacity: 0.6;
-    transition: opacity 0.2s;
-    display: inline-flex;
-}
-
-.btn-edit-name:hover {
-    opacity: 1;
-}
-
-.edit-name-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 8px;
-}
-
-.edit-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-save,
-.btn-cancel {
-    border: none;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.btn-save {
-    background: var(--success);
-    color: white;
-}
-
-.btn-cancel {
-    background: var(--light-2);
-    color: var(--dark-2);
-=======
-    margin: 10px 0 0;
-    font-family: 'Mulish', sans-serif;
-    font-weight: 500;
-    font-size: clamp(14px, 2.2vw, 18px);
-    color: var(--dark-2);
-}
-
-.landing-dropdown {
-    border-radius: 12px;
-    border: 1px solid var(--light-2);
-    padding: 0;
-    min-width: min(280px, calc(100vw - 32px));
-    max-width: calc(100vw - 32px);
-    transform: translate(0px, 46px);
-    position: absolute;
-    inset: 0px 0px auto auto;
-    margin: 0px;
-}
-
-@media (max-width: 480px) {
-    .landing-topbar {
-        top: 12px;
-        right: 12px;
-        left: 12px;
-    }
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-}
-
-.landing-userline {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-}
-
-<<<<<<< HEAD
-.landing-userline>i {
-    font-size: 20px;
-    color: var(--primary);
-    margin-top: 4px;
-}
-
-.landing-dropdown {
-    position: absolute;
-    /* Force absolute */
-    top: 100%;
-    right: 0;
-    left: auto !important;
-    /* Override any left alignment */
-    margin-top: 8px;
-    /* Space below button */
-    min-width: 280px;
-    /* Proper width for user details */
-    border-radius: 12px;
-    border: 1px solid var(--light-2);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    background-color: #FFFFFF;
-    z-index: 1050;
-    /* Ensure on top of everything */
-    padding: 8px 0;
-}
-
-/* CTA Button mapped to btn-primary btn-lg */
-.cta-btn {
-    padding: 16px 48px;
-    border-radius: 9999px;
-    border: none;
-    cursor: pointer;
-    background: var(--primary);
-    color: #fff;
-    font-family: var(--font-heading);
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.cta-btn:hover {
-    background: var(--primary-dark);
-}
-
-
-/* Helper Utilities */
-.text-danger {
-    color: var(--error) !important;
-}
-
-.text-success {
-    color: var(--success) !important;
-}
-
-.text-info {
-    color: var(--info) !important;
-}
-
-.text-warning {
-    color: var(--warning) !important;
-}
-
-.mb-2 {
-    margin-bottom: var(--space-1);
-}
-
-.mt-3 {
-    margin-top: var(--space-3);
-}
-
-/* Center Card (Restored & Updated) */
-.center-card {
-    width: min(640px, calc(100% - 32px));
-    padding: 24px 32px;
-    /* Reduced from 40px */
-    border-radius: 16px;
-    background: #E3EDFF;
-=======
-.landing-userline i {
-    font-size: 28px;
-    color: var(--dark-2);
-}
-
-.landing-username {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 16px;
-    color: var(--dark-1);
-}
-
-.landing-userdetail {
-    font-family: 'Mulish', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    color: var(--dark-2);
-}
-
-.fixed-screen {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.fixed-screen.bg-cover {
-    background: url("../assets/hackathon_bg.webp") center / cover no-repeat;
-}
-
-.center-card {
-    width: min(520px, calc(100% - 48px));
-    padding: 48px 40px;
-    border-radius: 16px;
-    background: rgba(41, 40, 40, 0.66);
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(6px);
-    border: 1px solid var(--primary-subtle);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-<<<<<<< HEAD
-    gap: 16px;
-    /* Reduced from 24px */
-    overflow: visible;
-    /* Prevent internal scrollbars */
-}
-
-.center-card::-webkit-scrollbar {
-    width: 6px;
-}
-
-.center-card::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.center-card::-webkit-scrollbar-thumb {
-    background: var(--dark-2);
-    border-radius: 3px;
-}
-
-/* Intro Box (Game Name) - Now "landing-hero" effect */
-.intro-box {
-    width: 100%;
-    background: #FFFFFF;
-    /* Keep white box */
-    padding: 32px 0;
-    /* Vertical padding */
-    border-bottom: 1px solid var(--light-2);
-    text-align: center;
-    margin-bottom: 24px;
-    /* To make it span the page width if placed outside, we'll need different positioning. 
-       If keeping inside center-card, it just spans card.
-       The user said "full width of the page". 
-       I will likely need to move the HTML element in the next step. */
-}
-
-.landing-hero-container {
-    width: 100%;
-    background: #99BBFF;
-    padding: 16px 24px;
-    /* Reduced from 24px */
-    border-bottom: 1px solid var(--light-2);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-/* How to Play Section */
-/* How to Play Section */
-.how-to-play {
-    width: 100%;
-    margin-top: 0;
-    padding: 20px 24px;
-    text-align: left;
-    color: var(--white);
-    font-family: 'Anti-Gravity', sans-serif;
-    background-color: #06C270;
-    border-radius: 8px;
-}
-
-.how-to-play h2,
-.how-to-play h3,
-.how-to-play li,
-.how-to-play p,
-.how-to-play strong {
-    font-family: 'Anti-Gravity', sans-serif;
-}
-
-.how-to-play h2 {
-    font-size: 20px;
-    margin-bottom: 12px;
-    color: var(--white);
-    font-weight: 700;
-}
-
-.how-to-play h3 {
-    font-size: 16px;
-    margin-top: 16px;
-    /* Reduced from 20 */
-    margin-bottom: 8px;
-    color: var(--white);
-    /* Updated for visibility on green */
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.how-to-play ul,
-.how-to-play ol {
-    padding-left: 20px;
-    margin-bottom: 12px;
-}
-
-.how-to-play li {
-    font-size: 14px;
-    margin-bottom: 4px;
-    /* Reduced from 6 */
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.95);
-}
-
-.how-to-play strong {
-    color: var(--white);
-    font-weight: 700;
-}
-
-.how-to-play hr {
-    border: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    margin: 8px 0;
-    /* Reduced from 12 */
-}
-
-/* Laptop/Desktop Compact View Adjustments */
-@media (max-height: 850px) {
-    .landing-hero-container {
-        padding: 12px 20px;
-    }
-
-    .landing-title {
-        font-size: 28px;
-    }
-
-    .landing-subtitle {
-        font-size: 14px;
-    }
-
-    .center-card {
-        padding: 16px 24px;
-        gap: 12px;
-    }
-
-    .how-to-play {
-        padding: 12px 20px;
-    }
-
-    .how-to-play h2 {
-        font-size: 16px;
-        margin-bottom: 6px;
-    }
-
-    .how-to-play h3 {
-        font-size: 14px;
-        margin-top: 10px;
-        margin-bottom: 4px;
-    }
-
-    .how-to-play li {
-        font-size: 12px;
-        margin-bottom: 2px;
-    }
-
-    .how-to-play ul,
-    .how-to-play ol {
-        margin-bottom: 6px;
-    }
-
-    .cta-btn {
-        padding: 12px 32px;
-        font-size: 16px;
-    }
-}
-
-/* -------------------------------
-   Dark Mode Overrides
--------------------------------- */
-body.dark-mode {
-    --primary: #60a5fa;
-    /* Lighter blue */
-    --primary-dark: #3b82f6;
-    --primary-subtle: rgba(59, 130, 246, 0.15);
-
-    --light-4: #0f172a;
-    /* Main BG (Slate 950) */
-    --white: #1e293b;
-    /* Card BG (Slate 800) */
-    --light-3: #1e293b;
-    --light-2: #334155;
-    /* Borders (Slate 700) */
-    --light-1: #475569;
-
-    --dark-1: #f8fafc;
-    /* Headings (Slate 50) */
-    --dark-2: #cbd5e1;
-    /* Body Text (Slate 300) */
-    --dark-3: #94a3b8;
-    /* Placeholders (Slate 400) */
-
-    --bg-topbar: rgba(15, 23, 42, 0.95);
-    /* Semi-transparent dark header */
-
-    color-scheme: dark;
-}
-=======
-    gap: 24px;
-}
-
-.cta-btn {
-    padding: 14px 40px;
-    border-radius: 9999px;
-    border: none;
-    cursor: pointer;
-    background: var(--primary);
-    color: var(--white);
-    font-family: 'Inter', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.cta-btn:hover {
-    background: var(--primary-dark);
-}
-
-.cta-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(51, 119, 255, 0.3);
-}
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862

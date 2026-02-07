@@ -33,6 +33,8 @@ words_data = [
 ]
 
 print("Starting seed process...")
+SortonymWord.objects.all().delete()
+print("Cleared existing words.")
 added = 0
 updated = 0
 

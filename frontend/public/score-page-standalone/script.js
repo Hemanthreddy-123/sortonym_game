@@ -68,10 +68,10 @@ function getTitleText(score) {
 }
 
 function getRingColor(score) {
-    if (score >= 15) return "#10b981"; // Green
-    if (score >= 10) return "#3b82f6"; // Blue
-    if (score >= 5) return "#f59e0b";  // Orange
-    return "#ef4444"; // Red
+    if (score >= 15) return "#00A63F"; // Brand Primary Green
+    if (score >= 10) return "#009688"; // Brand Teal Accent
+    if (score >= 5) return "#53565A";  // Brand Cool Gray
+    return "#FA6060"; // Semantic Red (Soft)
 }
 
 function animateScore(targetScore, maxScore) {

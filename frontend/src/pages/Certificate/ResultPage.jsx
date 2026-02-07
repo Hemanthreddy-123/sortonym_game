@@ -13,8 +13,7 @@ const ResultPage = () => {
     const { theme, toggleTheme } = useTheme();
     const certificateRef = useRef(null);
 
-    // Get data from navigation state (passed from GamePage)
-    // Get data from navigation state (passed from GamePage) OR sessionStorage (from standalone fallback)
+    // Get data
     let {
         results = null,
         gameData = null,
@@ -22,20 +21,18 @@ const ResultPage = () => {
         antonymBox = []
     } = location.state || {};
 
+    // Fallback for standalone reload
     if (!results) {
         const storedData = sessionStorage.getItem('gameResults');
         if (storedData) {
             try {
                 const parsed = JSON.parse(storedData);
-                // Map standalone format back to React format if needed
                 results = {
                     score: parsed.score,
                     total_correct: parsed.totalCorrect,
                     time_bonus: parsed.timeBonus
                 };
-                gameData = {
-                    words: new Array(parsed.totalWords).fill(null), // Dummy array for length
-                };
+                gameData = { words: new Array(parsed.totalWords).fill(null) };
                 synonymBox = parsed.synonymBox || [];
                 antonymBox = parsed.antonymBox || [];
             } catch (e) {
@@ -44,90 +41,47 @@ const ResultPage = () => {
         }
     }
 
-    // Default values if still missing
     results = results || { score: 0, total_correct: 0, time_bonus: 0 };
-    gameData = gameData || { words: [] };
-
-    const [animatedScore, setAnimatedScore] = useState(0);
-
-
-
     const score = results?.score || 0;
     const maxScore = 20;
     const accuracyNum = results?.total_correct || 0;
     const totalWords = gameData?.words?.length || 8;
     const bonusTime = results?.time_bonus || 0;
 
-    // --- Animation Logic ---
+    // Animation
+    const [animatedScore, setAnimatedScore] = useState(0);
     useEffect(() => {
         let startTime;
         const duration = 1500;
-
         const animateScore = (currentTime) => {
             if (!startTime) startTime = currentTime;
             const progress = Math.min((currentTime - startTime) / duration, 1);
-
             const easedProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
             setAnimatedScore(easedProgress * score);
-
             if (progress < 1) requestAnimationFrame(animateScore);
         };
         requestAnimationFrame(animateScore);
     }, [score]);
 
-    // --- SCROLL LOCK & LAYOUT FIX ---
-    // Force body overflow and display based on device type to ensure mobile scrolling works
+    // Scroll handling
     useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth <= 900) {
-                document.body.style.overflow = 'auto'; // Enable scroll on mobile
-                document.body.style.position = 'static';
-                document.body.style.display = 'block'; // Disable flex centering from index.css
-                document.body.style.height = 'auto';
-            } else {
-                document.body.style.overflow = 'hidden'; // Lock on desktop
-                // We can leave display as is or reset, but usually desktop relies on the flex center
-                document.body.style.display = 'flex';
-                document.body.style.height = '100vh';
-            }
-        };
-
-        // Run on mount
-        handleResize();
-        window.addEventListener('resize', handleResize);
-
+        document.body.style.overflow = 'auto';
         return () => {
-            window.removeEventListener('resize', handleResize);
-            // Cleanup: reset to defaults (likely index.css values)
             document.body.style.overflow = '';
-            document.body.style.position = '';
-            document.body.style.display = '';
-            document.body.style.height = '';
         };
     }, []);
 
-    // --- Ring Logic ---
-    const radius = 80;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (Math.min(animatedScore, maxScore) / maxScore) * circumference;
-
-    let ringColor = "#ef4444"; // Red default
-    let titleText = "Keep Practicing";
-
-    if (score >= 15) {
-        ringColor = "#10b981"; // Green
-        titleText = "Great Job!";
-    } else if (score >= 10) {
-        ringColor = "#3b82f6"; // Blue
-        titleText = "Good Job!";
-    } else if (score >= 5) {
-        ringColor = "#f59e0b"; // Orange
-        titleText = "Well Done!";
-    }
-
-    // Button Handlers
+    // Handlers
     const handlePlayAgain = () => navigate('/game');
-
+    const handleExit = () => navigate('/home');
+    const handleShare = () => {
+        const text = `I scored ${score.toFixed(1)}/20 in the Sortonym Challenge! 🎯`;
+        if (navigator.share) navigator.share({ title: 'Sortonym Challenge', text });
+        else {
+            navigator.clipboard.writeText(text);
+            alert('Score copied to clipboard!');
+        }
+    };
     const handleDownloadCert = async () => {
         if (!certificateRef.current) return;
         try {
@@ -141,124 +95,212 @@ const ResultPage = () => {
         }
     };
 
-    const handleShare = () => {
-        const text = `I scored ${score.toFixed(1)}/20 in the Sortonym Challenge! 🎯`;
-        if (navigator.share) {
-            navigator.share({ title: 'Sortonym Challenge', text });
-        } else {
-            navigator.clipboard.writeText(text);
-            alert('Score copied to clipboard!');
-        }
-    };
-
-    const handleExit = () => navigate('/home');
+    // Ring Calc
+    const radius = 60;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (Math.min(animatedScore, maxScore) / maxScore) * circumference;
 
     return (
-        <div className="results-page-game">
-            <button className="theme-toggle-result" onClick={toggleTheme}>
-                {theme === 'light' ? <i className="bi bi-moon-fill" /> : <i className="bi bi-sun-fill" />}
-            </button>
-            <div className="victory-card">
+        <div className="result-dashboard-container">
+            {/* --- Top Section: Green Header & Stats --- */}
+            <div className="result-main-card">
 
-                {/* --- LEFT COLUMN: SYNONYMS --- */}
-                <div className="side-column left-panel">
-                    <div className="panel-header theme-green">
-                        <i className="bi bi-check-circle-fill"></i> SYNONYMS
+                {/* Green Header */}
+                <div className="result-header-green">
+                    <div className="header-left">
+                        <div className="trophy-icon-box">
+                            <i className="bi bi-trophy-fill"></i>
+                        </div>
+                        <div className="header-text">
+                            <span className="subtitle">CHALLENGE COMPLETE</span>
+                            <h1>Outstanding Performance!</h1>
+                        </div>
                     </div>
-                    <div className="word-list-scroll">
-                        {synonymBox.map((w, i) => {
-                            const isCorrect = w.id.startsWith('syn_');
-                            return (
-                                <div key={i} className={`word-row ${isCorrect ? 'row-green' : 'row-red'}`}>
-                                    {isCorrect && <i className="bi bi-check-lg"></i>}
-                                    {!isCorrect && <i className="bi bi-x-lg"></i>}
-                                    <span>{w.word}</span>
-                                </div>
-                            );
-                        })}
-                        {synonymBox.length === 0 && <span className="empty-text">No words placed</span>}
+                    <div className="header-right">
+                        <div className="info-badge">
+                            <span className="label text-white">TIME</span>
+                            <span className="value text-white">2:34</span>
+                        </div>
+                        <div className="info-badge">
+                            <span className="label text-white">RANK</span>
+                            <span className="value text-white">#12</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* --- CENTER COLUMN: SCORE & ACTIONS --- */}
-                <div className="center-panel">
+                {/* Content Body */}
+                <div className="result-body-grid">
 
-                    <div className="level-badge">{level} CHALLENGE</div>
-                    <h1 className="victory-title">{titleText}</h1>
-
-                    {/* CIRCULAR SCORE */}
-                    <div className="score-meter-wrapper">
-                        <div className="score-meter-container">
-                            <svg className="score-svg" viewBox="0 0 200 200">
-                                <circle cx="100" cy="100" r={radius} className="meter-bg" />
+                    {/* Left: Score Circle */}
+                    <div className="score-circle-panel">
+                        <div className="score-circle-wrapper">
+                            <svg className="score-svg" width="160" height="160" viewBox="0 0 160 160">
+                                <circle cx="80" cy="80" r="60" className="meter-bg" />
                                 <circle
-                                    cx="100" cy="100" r={radius}
+                                    cx="80" cy="80" r="60"
                                     className="meter-progress"
-                                    stroke={ringColor}
                                     strokeDasharray={circumference}
-                                    style={{ strokeDashoffset: offset }}
+                                    strokeDashoffset={offset}
                                 />
                             </svg>
-                            <div className="score-value-wrapper">
-                                <span className="score-label-small">TOTAL SCORE</span>
-                                <span className="score-number-big" style={{ color: ringColor }}>{animatedScore.toFixed(1)}</span>
+                            <div className="score-value-text">
+                                <i className="bi bi-award-fill"></i>
+                                <span className="score-num">{animatedScore.toFixed(1)}</span>
+                                <span className="score-label">TOTAL SCORE</span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* STATS */}
-                    <div className="stats-row">
-                        <div className="stat-mini">
-                            <span className="stat-mini-label">ACCURACY</span>
-                            <span className="stat-mini-value">{accuracyNum}/{totalWords}</span>
-                        </div>
-                        <div className="stat-mini">
-                            <span className="stat-mini-label">BONUS</span>
-                            <span className="stat-mini-value">+{bonusTime.toFixed(1)}</span>
+                        <div className="stars-row">
+                            <i className="bi bi-star-fill active"></i>
+                            <i className="bi bi-star-fill active"></i>
+                            <i className="bi bi-star-fill active"></i>
+                            <i className="bi bi-star-fill active"></i>
+                            <i className="bi bi-star-half active"></i>
                         </div>
                     </div>
 
-                    {/* BUTTONS */}
-                    <button className="btn-main-action" onClick={handlePlayAgain}>
-                        Play Again
-                    </button>
-                    <div className="sub-actions">
-                        <button className="btn-sub-action" onClick={handleDownloadCert}>Certificate</button>
-                        <button className="btn-sub-action" onClick={handleShare}>Share</button>
-                    </div>
-                    <button className="btn-link-exit" onClick={handleExit}>Exit</button>
-                </div>
+                    {/* Right: Stats Grid */}
+                    <div className="stats-dashboard-grid">
 
-                {/* --- RIGHT COLUMN: ANTONYMS --- */}
-                <div className="side-column right-panel">
-                    <div className="panel-header theme-red">
-                        <i className="bi bi-x-circle-fill"></i> ANTONYMS
-                    </div>
-                    <div className="word-list-scroll">
-                        {antonymBox.map((w, i) => {
-                            const isCorrect = w.id.startsWith('ant_');
-                            return (
-                                <div key={i} className={`word-row ${isCorrect ? 'row-green' : 'row-red'}`}>
-                                    {isCorrect && <i className="bi bi-check-lg"></i>}
-                                    {!isCorrect && <i className="bi bi-x-lg"></i>}
-                                    <span>{w.word}</span>
+                        {/* Stat Card 1: Accuracy */}
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="icon-box green-icon"><i className="bi bi-bullseye"></i></div>
+                                <span className="badge-pill light-green">33%</span>
+                            </div>
+                            <div className="stat-main">
+                                <span className="stat-label">ACCURACY</span>
+                                <span className="stat-value">{accuracyNum}/{totalWords}</span>
+                                <div className="progress-bar-mini">
+                                    <div className="fill" style={{ width: `${(accuracyNum / totalWords) * 100}%` }}></div>
                                 </div>
-                            );
-                        })}
-                        {antonymBox.length === 0 && <span className="empty-text">No words placed</span>}
+                            </div>
+                        </div>
+
+                        {/* Stat Card 2: Bonus */}
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="icon-box green-icon"><i className="bi bi-lightning-fill"></i></div>
+                                <span className="badge-pill light-green">Speed</span>
+                            </div>
+                            <div className="stat-main">
+                                <span className="stat-label">BONUS POINTS</span>
+                                <span className="stat-value green-text">+{bonusTime.toFixed(1)}</span>
+                                <span className="stat-sub">Time bonus earned!</span>
+                            </div>
+                        </div>
+
+                        {/* Stat Card 3: XP */}
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="icon-box cyan-icon"><i className="bi bi-graph-up-arrow"></i></div>
+                                <span className="badge-pill light-cyan">+15%</span>
+                            </div>
+                            <div className="stat-main">
+                                <span className="stat-label">XP EARNED</span>
+                                <span className="stat-value">+{Math.round(score * 12)}</span>
+                                <span className="stat-sub">Level up soon!</span>
+                            </div>
+                        </div>
+
+                        {/* Stat Card 4: Streak */}
+                        <div className="stat-card">
+                            <div className="stat-top">
+                                <div className="icon-box green-icon"><i className="bi bi-stars"></i></div>
+                                <span className="badge-pill white-pill">Active</span>
+                            </div>
+                            <div className="stat-main">
+                                <span className="stat-label">WIN STREAK</span>
+                                <span className="stat-value green-text">5 Days</span>
+                                <span className="stat-sub">Keep it going! 🔥</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            {/* --- Action Buttons --- */}
+            <div className="action-buttons-row">
+                <button className="btn-action primary-green" onClick={handlePlayAgain}>
+                    <i className="bi bi-trophy-fill"></i> Play Again
+                </button>
+                <button className="btn-action white-outline" onClick={handleDownloadCert}>
+                    <i className="bi bi-download"></i> Certificate
+                </button>
+                <button className="btn-action white-outline" onClick={handleShare}>
+                    <i className="bi bi-share-fill"></i> Share
+                </button>
+                <button className="btn-action white-outline" onClick={handleExit}>
+                    <i className="bi bi-box-arrow-right"></i> Exit
+                </button>
+            </div>
+
+            {/* --- Bottom Section: Words Review --- */}
+            <div className="words-review-container">
+
+                {/* Synonyms Column */}
+                <div className="review-column">
+                    <div className="column-header green-header">
+                        <div className="icon-check"><i className="bi bi-check-lg"></i></div>
+                        <div className="header-details ">
+                            <h3 className="text-white">Synonyms</h3>
+                            <span className="text-white">Similar meanings</span>
+                        </div>
+                        <span className="count-badge">{synonymBox.filter(w => w.id.startsWith('syn_')).length}/{synonymBox.length}</span>
+                    </div>
+
+                    <div className="review-list">
+                        {synonymBox.map((w, i) => (
+                            <div key={i} className={`review-item ${w.id.startsWith('syn_') ? 'item-correct' : 'item-wrong'}`}>
+                                <div className={`status-icon ${w.id.startsWith('syn_') ? 'icon-success' : 'icon-error'}`}>
+                                    <i className={`bi ${w.id.startsWith('syn_') ? 'bi-check-lg' : 'bi-x-lg'}`}></i>
+                                </div>
+                                <div className="item-text">
+                                    <span className="word">{w.word}</span>
+                                    <span className="status-label">{w.id.startsWith('syn_') ? 'Correct answer' : 'Incorrect selection'}</span>
+                                </div>
+                                {w.id.startsWith('syn_') && <span className="xp-badge">+10 XP</span>}
+                            </div>
+                        ))}
+                        {synonymBox.length === 0 && <div className="empty-msg">No words here</div>}
+                    </div>
+                </div>
+
+                {/* Antonyms Column */}
+                <div className="review-column">
+                    <div className="column-header red-header">
+                        <div className="icon-cross"><i className="bi bi-x-lg"></i></div>
+                        <div className="header-details">
+                            <h3 className="text-white">Antonyms</h3>
+                            <span className="text-white">Opposite meanings</span>
+                        </div>
+                        <span className="count-badge">{antonymBox.filter(w => w.id.startsWith('ant_')).length}/{antonymBox.length}</span>
+                    </div>
+
+                    <div className="review-list">
+                        {antonymBox.map((w, i) => (
+                            <div key={i} className={`review-item ${w.id.startsWith('ant_') ? 'item-correct' : 'item-wrong'}`}>
+                                <div className={`status-icon ${w.id.startsWith('ant_') ? 'icon-success' : 'icon-error'}`}>
+                                    <i className={`bi ${w.id.startsWith('ant_') ? 'bi-check-lg' : 'bi-x-lg'}`}></i>
+                                </div>
+                                <div className="item-text">
+                                    <span className="word">{w.word}</span>
+                                    <span className="status-label">{w.id.startsWith('ant_') ? 'Correct answer' : 'Incorrect selection'}</span>
+                                </div>
+                                {w.id.startsWith('ant_') && <span className="xp-badge">+10 XP</span>}
+                            </div>
+                        ))}
+                        {antonymBox.length === 0 && <div className="empty-msg">No words here</div>}
                     </div>
                 </div>
 
             </div>
 
-            {/* Hidden Certificate Component for Capture */}
+            {/* Hidden Certificate */}
             <div style={{ position: "fixed", top: "0", left: "-10000px", opacity: 0 }}>
-                <CertificatePage
-                    ref={certificateRef}
-                    member={member}
-                    level={level}
-                />
+                <CertificatePage ref={certificateRef} member={member} level={level} />
             </div>
+
         </div>
     );
 };

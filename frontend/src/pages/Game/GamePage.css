@@ -1,632 +1,521 @@
 /* =====================================================
-   GAME PLAYING PAGE: Clean, Compact, Mobile-First
-   Theme: Modern Word Puzzle App
+   GAME PAGE - Figma Design Match
+   3-Column Layout: Word Bank | Anchor | Drop Zones
 ===================================================== */
 
 :root {
-    --game-bg: #f8fafc;
-    --zone-bg: #ffffff;
-    --syn-color: #10b981;
-    /* Green */
-    --ant-color: #ef4444;
-    /* Red */
-    --primary: #3b82f6;
-    --header-bg: #ffffff;
-    --text-main: #1e293b;
-
-    /* Card/Chi Dimensions */
-    --card-radius: 12px;
+    --brand-green: #00A63F;
+    --brand-black: #000000;
+    --brand-white: #FFFFFF;
+    --soft-mint: #E6F4EE;
+    --cloud-gray: #F6F6F6;
+    --slate-gray: #9CA3AF;
+    --cool-gray: #53565A;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-pill: 999px;
 }
 
+/* Mobile base styles */
 .game-page.playing-mode {
     min-height: 100vh;
-    background: var(--game-bg);
+    background-color: var(--cloud-gray);
     display: flex;
     flex-direction: column;
     font-family: 'Inter', system-ui, sans-serif;
-    overflow: hidden;
-    /* Prevent scrolling if possible */
+    color: var(--brand-black);
 }
 
-/* --- 1. Compact Header --- */
+/* Header */
 .game-header-compact {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    background: var(--header-bg);
-    border-bottom: 1px solid #e2e8f0;
-    font-weight: 600;
-    color: var(--text-main);
-    flex-shrink: 0;
+    padding: 16px 24px;
+    background: var(--brand-white);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Player Name - Full Visibility */
 .header-player {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 14px;
-    font-weight: 700;
-    flex: 1;
-    /* Allow taking available space */
-    min-width: 0;
-    /* Enable flex shrinking if absolutely tight */
-    white-space: normal;
-    /* Allow wrapping if really long */
-    line-height: 1.2;
+    font-weight: 600;
+    color: var(--cool-gray);
 }
 
 .header-player i {
-    color: var(--primary);
+    color: var(--brand-green);
     font-size: 18px;
-    flex-shrink: 0;
-}
-
-/* Timer (Center) - High Visibility */
-.header-timer {
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 18px;
-    font-weight: 800;
-    background: #3b82f6;
-    color: white;
-    padding: 6px 18px;
-    border-radius: 99px;
-    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    background: var(--soft-mint);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
     display: flex;
-    justify-content: center;
     align-items: center;
-    min-width: 80px;
+    justify-content: center;
 }
 
-.header-timer.critical {
-    background: #ef4444;
-    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.4);
-    animation: pulse 1s infinite;
-}
-
-/* Level (Right) */
-.header-level {
-    font-size: 12px;
-    text-transform: uppercase;
-    color: #64748b;
+.header-timer {
+    font-size: 16px;
     font-weight: 700;
-    width: 30%;
-    text-align: right;
+    background: var(--brand-green);
+    color: var(--brand-white);
+    padding: 8px 20px;
+    border-radius: var(--radius-pill);
+    min-width: 70px;
+    text-align: center;
 }
 
-/* --- 2. Anchor Word (Title) --- */
+.header-level {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--slate-gray);
+}
+
+/* Anchor Word Section */
 .anchor-word-section {
     text-align: center;
-    padding: 12px 16px 8px;
-    flex-shrink: 0;
+    padding: 20px;
+    background: var(--brand-white);
 }
 
 .anchor-label {
-    font-size: 10px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #94a3b8;
+    letter-spacing: 1.5px;
+    color: var(--slate-gray);
     font-weight: 700;
-    display: block;
-    margin-bottom: 2px;
+    margin-bottom: 8px;
 }
 
 .anchor-word-text {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 900;
-    color: var(--text-main);
+    color: var(--brand-black);
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: -0.5px;
 }
 
-/* --- 3. Main Game Board --- */
+/* Game Board */
 .game-board {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 0 12px 12px;
-    gap: 12px;
-    overflow: hidden;
+    padding: 16px;
+    background: var(--cloud-gray);
+    overflow-y: auto;
 }
 
 .game-play-area {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    min-height: 0;
+    gap: 16px;
 }
 
-/* --- Target Zones (Side by Side) --- */
+/* Target Zones */
 .target-zones-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    height: 30vh;
-    min-height: 180px;
-    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .drop-zone {
-    background: #ffffff;
-    border-radius: 16px;
+    background: var(--brand-white);
+    border-radius: var(--radius-lg);
     border: 2px dashed #cbd5e1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.2s;
-    position: relative;
+    padding: 16px;
+    min-height: 150px;
 }
 
-.drop-zone.drag-over {
-    transform: scale(1.02);
-}
-
-.zone-header {
-    background: #f8fafc;
-    padding: 6px 10px;
-    border-bottom: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-/* Specific Zone Styling */
 .synonym-zone {
-    border-color: #a7f3d0;
-    background: #ecfdf5;
-}
-
-.synonym-zone .zone-header {
-    color: #059669;
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.synonym-zone.drag-over {
-    background: #d1fae5;
-    border-color: var(--syn-color);
+    border-color: #A3D9C1;
+    background: var(--soft-mint);
 }
 
 .antonym-zone {
-    border-color: #fecaca;
-    background: #fef2f2;
+    border-color: #FECACA;
+    background: #FFF5F5;
 }
 
-.antonym-zone .zone-header {
-    color: #dc2626;
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.antonym-zone.drag-over {
-    background: #fee2e2;
-    border-color: var(--ant-color);
+.zone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .zone-content {
-    flex: 1;
-    padding: 8px;
-    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .zone-placeholder {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    opacity: 0.6;
-}
-
-/* Dropped Chips */
-.word-chip {
-    padding: 6px 8px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
     text-align: center;
-    cursor: grab;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    color: var(--slate-gray);
+    font-size: 11px;
+    padding: 20px;
 }
 
-.synonym-chip {
-    background: white;
-    border: 1px solid #a7f3d0;
-    color: #065f46;
-}
-
-.antonym-chip {
-    background: white;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
-
-
-/* --- Source Words (Grid) --- */
+/* Source Pool */
 .source-zone-container {
-    flex: 1;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 16px;
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    background: var(--brand-white);
+    border-radius: var(--radius-lg);
+    padding: 16px;
 }
 
 .source-pool {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 8px;
-    overflow-y: auto;
-    align-content: start;
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
+/* Word Cards - Pill Style */
 .word-card {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-bottom: 3px solid #cbd5e1;
-    /* Game tile look */
-    border-radius: 12px;
-    padding: 10px 8px;
-    font-size: 13px;
+    background: var(--brand-green);
+    color: var(--brand-white);
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 12px 20px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--text-main);
     text-align: center;
     cursor: grab;
-    touch-action: none;
-    /* Prevent browser touch gestures */
-    transition: transform 0.1s, border 0.1s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    /* Prevent text selection */
-    -webkit-user-select: none;
+    transition: all 0.2s;
 }
 
 .word-card:active {
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    cursor: grabbing;
+    transform: scale(0.98);
 }
 
 .word-card.dragging {
     opacity: 0.5;
 }
 
+.word-chip {
+    background: var(--brand-white);
+    color: var(--brand-green);
+    border: 2px solid var(--brand-green);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: grab;
+}
 
-/* --- Footer Controls (Fixed Bottom) --- */
+/* Footer Controls */
 .game-footer-controls {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    /* Submit bigger than Exit */
-    gap: 12px;
-    padding: 12px;
-    background: white;
-    /* Ensure readable over content */
-    border-top: 1px solid #e2e8f0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;
-    z-index: 50;
-    margin: 0 -12px -12px;
-    /* Pull to edges if inside padded container */
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+    background: var(--brand-white);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .btn {
     border: none;
-    border-radius: 16px;
-    padding: 18px;
-    font-size: 16px;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
-    transition: transform 0.1s;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-submit {
+    background: var(--brand-green);
+    color: var(--brand-white);
+}
+
+.btn-submit:disabled {
+    background: var(--cloud-gray);
+    color: var(--slate-gray);
+    cursor: not-allowed;
+}
+
+.btn-exit {
+    background: var(--brand-white);
+    color: var(--cool-gray);
+    border: 1px solid #E5E7EB;
+}
+
+/* ===================================================
+   DESKTOP LAYOUT - 3 COLUMN (Figma Design)
+=================================================== */
+@media (min-width: 768px) {
+    .game-page.playing-mode {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Header */
+    .game-header-compact {
+        padding: 16px 48px;
+    }
+
+    .header-player {
+        font-size: 16px;
+    }
+
+    .header-timer {
+        font-size: 20px;
+        padding: 10px 28px;
+    }
+
+    /* Main Game Area - 3 Column Layout */
+    .game-board {
+        padding: 24px 48px;
+        height: calc(100vh - 240px);
+        /* Account for header + footer */
+        overflow: hidden;
+    }
+
+    .game-play-area {
+        height: 100%;
+        display: grid;
+        grid-template-columns: 260px 1fr 540px;
+        /* Word Bank | Center | Drop Zones (wider) */
+        gap: 28px;
+        align-items: start;
+    }
+
+    /* Left Column - Word Bank */
+    .source-zone-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        /* Ensure rounded corners clip content */
+        border: 1px solid #e2e8f0;
+    }
+
+    .source-header {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #f8fafc;
+    }
+
+    .source-pool {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        /* Custom Scrollbar for better visibility */
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    /* Webkit Scrollbar */
+    .source-pool::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .source-pool::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .source-pool::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+
+    .word-card {
+        padding: 14px 24px;
+        font-size: 15px;
+    }
+
+    /* Center Column - Anchor Word (Large) */
+    .target-zones-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* Right Column - Drop Zones (SIDE BY SIDE) */
+    .game-play-area>.target-zones-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        height: 100%;
+        align-content: start;
+    }
+
+    .drop-zone {
+        min-height: 380px;
+        height: auto;
+        padding: 0;
+    }
+
+    .zone-header {
+        font-size: 13px;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 0;
+    }
+
+    .zone-content {
+        padding: 16px;
+        min-height: 300px;
+    }
+
+    /* Footer */
+    .game-footer-controls {
+        padding: 24px 48px;
+        gap: 24px;
+    }
+
+    .btn {
+        padding: 18px 28px;
+        font-size: 15px;
+    }
+
+    /* Scrollbar */
+    .source-pool::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .source-pool::-webkit-scrollbar-track {
+        background: var(--cloud-gray);
+        border-radius: 4px;
+    }
+
+    .source-pool::-webkit-scrollbar-thumb {
+        background: var(--slate-gray);
+        border-radius: 4px;
+    }
+}
+
+/* Animations */
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+    }
+}
+
+.header-timer.critical {
+    background: #FA6060;
+    animation: pulse-red 1s infinite;
+}
+
+/* Results Mode */
+.game-page.results-mode {
+    background: var(--brand-green);
+    color: white;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.btn:active {
-    transform: translateY(4px);
-}
-
-.btn-submit {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: white;
-    box-shadow: 0 6px 0 #1d4ed8, 0 10px 15px rgba(37, 99, 235, 0.3);
-    /* Deep 3D Shadow */
-}
-
-.btn-submit:disabled {
-    background: #cbd5e1;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-exit {
-    background: #f1f5f9;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-    box-shadow: 0 6px 0 #cbd5e1;
-}
-
-.btn-exit:hover {
-    color: #ef4444;
-    border-color: #fee2e2;
-    background: #fef2f2;
-}
-
-/* --- Animations --- */
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-/* --- Mobile: Enable Scrolling --- */
+/* ===================================================
+   MOBILE TOUCH IMPROVEMENTS
+=================================================== */
 @media (max-width: 767px) {
-    .game-page.playing-mode {
-        overflow: auto !important;
-        /* Enable scrolling on mobile */
-        min-height: 100vh;
-        height: auto;
-    }
 
-    .game-board {
-        overflow: visible !important;
-        min-height: 0;
-        flex: 1;
-    }
-
-    /* Make zones smaller on very small screens */
-    .target-zones-container {
-        min-height: 150px;
-        height: 25vh;
-    }
-}
-
-/* --- Desktop Scaling for Results --- */
-@media (min-width: 768px) {
-    .game-page.playing-mode {
+    /* Larger touch targets for word cards */
+    .word-card {
+        padding: 16px 20px;
+        font-size: 16px;
+        min-height: 48px;
+        display: flex;
         align-items: center;
-        background: #f1f5f9;
         justify-content: center;
-        padding: 20px;
-        overflow: auto;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: none;
     }
 
-    .game-header-compact {
-        border-radius: 16px 16px 0 0;
+    /* Better visual feedback on touch */
+    .word-card:active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 166, 63, 0.3);
+        z-index: 1000;
     }
 
+    .word-card.dragging {
+        opacity: 0.6;
+        transform: scale(1.1);
+        box-shadow: 0 8px 20px rgba(0, 166, 63, 0.4);
+    }
+
+    /* Drop zones - larger and more visible */
+    .drop-zone {
+        min-height: 180px;
+        border-width: 3px;
+        transition: all 0.3s ease;
+    }
+
+    .drop-zone.drag-over {
+        transform: scale(1.02);
+        border-width: 4px;
+        box-shadow: 0 8px 24px rgba(0, 166, 63, 0.2);
+    }
+
+    /* Larger touch targets for chips */
+    .word-chip {
+        padding: 12px 16px;
+        font-size: 15px;
+        min-height: 44px;
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+    }
+
+    .word-chip:active {
+        transform: scale(1.05);
+    }
+
+    /* Better placeholder visibility */
+    .zone-placeholder {
+        padding: 32px 16px;
+        font-size: 13px;
+    }
+
+    /* Prevent text selection during drag */
     .game-board {
-        padding-bottom: 20px;
+        -webkit-user-select: none;
+        user-select: none;
     }
 
-    .game-header-compact,
-    .anchor-word-section,
-    .game-board {
-        width: 100%;
-        max-width: 500px;
-        /* Phone-sized container on desktop */
-        background: white;
+    /* Better spacing for touch */
+    .source-pool {
+        gap: 12px;
     }
 
-    .game-board {
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        height: 700px;
-        /* Fixed height container */
+    .target-zones-container {
+        gap: 20px;
     }
-}
-
-/* --- Dark Mode Overrides --- */
-body.dark-mode .game-page.playing-mode {
-    --game-bg: #0f172a;
-    --header-bg: #1e293b;
-    --text-main: #f8fafc;
-}
-
-body.dark-mode .game-header-compact {
-    border-color: #334155;
-    background: #1e293b;
-    color: #f8fafc;
-}
-
-body.dark-mode .anchor-word-section {
-    background: #1e293b;
-}
-
-body.dark-mode .anchor-label {
-    color: #94a3b8;
-}
-
-body.dark-mode .anchor-word-text {
-    color: #f8fafc;
-}
-
-body.dark-mode .game-board {
-    background: #1e293b;
-}
-
-/* Drop Zones */
-body.dark-mode .drop-zone {
-    background: #0f172a;
-    border-color: #334155;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-body.dark-mode .zone-header {
-    background: #1e293b;
-    border-color: #334155;
-}
-
-/* Synonyms */
-body.dark-mode .synonym-zone {
-    background: rgba(6, 95, 70, 0.1);
-    border-color: #059669;
-}
-
-body.dark-mode .synonym-zone .zone-header {
-    background: rgba(6, 95, 70, 0.2);
-    color: #34d399;
-}
-
-/* Antonyms */
-body.dark-mode .antonym-zone {
-    background: rgba(153, 27, 27, 0.1);
-    border-color: #dc2626;
-}
-
-body.dark-mode .antonym-zone .zone-header {
-    background: rgba(153, 27, 27, 0.2);
-    color: #f87171;
-}
-
-/* Source Pool */
-body.dark-mode .source-zone-container {
-    background: rgba(30, 41, 59, 0.6);
-    border-color: #334155;
-}
-
-body.dark-mode .word-card {
-    background: #1e293b;
-    border-color: #334155;
-    border-bottom-color: #0f172a;
-    color: #f8fafc;
-}
-
-body.dark-mode .word-card:active {
-    border-bottom-width: 1px;
-    background: #334155;
-}
-
-/* Footer */
-body.dark-mode .game-footer-controls {
-    background: #1e293b;
-    border-color: #334155;
-}
-
-body.dark-mode .btn-exit {
-    background: #0f172a;
-    border-color: #334155;
-    color: #94a3b8;
-    box-shadow: 0 6px 0 #020617;
-}
-
-/* Chips in zones */
-body.dark-mode .synonym-chip {
-    background: #064e3b;
-    border-color: #059669;
-    color: #d1fae5;
-}
-
-body.dark-mode .antonym-chip {
-    background: #7f1d1d;
-    border-color: #dc2626;
-    color: #fee2e2;
-}
-
-/* Theme Toggle Game */
-.theme-toggle-game {
-    background: transparent;
-    border: none;
-    color: var(--text-main);
-    font-size: 1.2rem;
-    cursor: pointer;
-    vertical-align: middle;
-    margin-left: 8px;
-    padding: 4px;
-    border-radius: 50%;
-    transition: background 0.2s;
-}
-
-body.dark-mode .theme-toggle-game {
-    color: #fbbf24;
-    /* Gold sun */
-}
-
-.theme-toggle-game:hover {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-body.dark-mode .theme-toggle-game:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* --- Results Mode Dark Overrides --- */
-body.dark-mode .game-page.results-mode {
-    background: #0f172a;
-    color: #f8fafc;
-}
-
-body.dark-mode .results-celebration-container {
-    background: #1e293b;
-    border: 1px solid #334155;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-}
-
-body.dark-mode .results-title-main {
-    color: #f8fafc;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-body.dark-mode .results-subtitle {
-    color: #94a3b8;
-}
-
-body.dark-mode .stat-card {
-    background: #0f172a;
-    border-color: #334155;
-}
-
-body.dark-mode .stat-value {
-    color: #f8fafc;
-}
-
-body.dark-mode .stat-label {
-    color: #94a3b8;
-}
-
-body.dark-mode .stat-icon {
-    background: rgba(30, 41, 59, 1);
-    color: #60a5fa;
-}
-
-body.dark-mode .btn-game-secondary {
-    background: #1e293b;
-    border-color: #334155;
-    color: #cbd5e1;
-    box-shadow: 0 4px 0 #0f172a;
-}
-
-body.dark-mode .btn-game-secondary:hover {
-    background: #334155;
-    color: #f8fafc;
-    border-color: #475569;
-}
-
-body.dark-mode .score-text-overlay .score-msg {
-    color: #cbd5e1 !important;
 }

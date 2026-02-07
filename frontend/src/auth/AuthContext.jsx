@@ -10,13 +10,10 @@ export function AuthProvider({ children }) {
   const [member, setMember] = useState(null)
   const [status, setStatus] = useState('loading')
 
-<<<<<<< HEAD
   const updateMember = useCallback((updatedData) => {
     setMember((prev) => ({ ...prev, ...updatedData }))
   }, [])
 
-=======
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
   const applySession = useCallback((data) => {
     setAuthToken(data.token)
     setToken(data.token)
@@ -85,13 +82,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-<<<<<<< HEAD
     () => ({ token, user, member, status, signIn, signInWithOtp, signOut, refresh, updateMember }),
     [token, user, member, status, signIn, signInWithOtp, signOut, refresh, updateMember],
-=======
-    () => ({ token, user, member, status, signIn, signInWithOtp, signOut, refresh }),
-    [token, user, member, status, signIn, signInWithOtp, signOut, refresh],
->>>>>>> c4aab529800c7f6d987e53657184410f45f54862
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

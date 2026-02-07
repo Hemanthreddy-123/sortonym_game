@@ -1,6 +1,6 @@
 /* =====================================================
    SCORE PAGE: Responsive Design
-   Desktop: 3-column grid | Mobile: Stacked with scroll
+   Brand Aligned: Green #00A63F, Black #000, White #FFF
 ===================================================== */
 
 * {
@@ -10,290 +10,207 @@
 }
 
 :root {
-    --res-bg: #f3f4f6;
-    --res-card-bg: #ffffff;
-    --res-green: #10b981;
-    --res-red: #ef4444;
-    --res-blue: #3b82f6;
-    --res-orange: #f59e0b;
+    /* Brand Palette */
+    --brand-green: #00A63F;
+    --brand-forest: #0E5F3A;
+    --brand-black: #000000;
+    --brand-white: #FFFFFF;
+    --brand-teal: #009688;
+    --brand-mint: #E6F4EE;
+    --brand-cloud: #F6F6F6;
+    --brand-slate: #9CA3AF;
+    --brand-cool: #53565A;
+
+    /* Semantic Colors */
+    --sem-success: #00A63F;
+    --sem-error: #FA6060;
+    /* Slightly softer red */
+
+    /* UI Variables */
+    --bg-page: var(--brand-cloud);
+    --bg-card: var(--brand-white);
+    --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
 }
 
 body {
     font-family: 'Outfit', sans-serif;
-    background: var(--res-bg);
-    overflow: auto;
+    background: var(--bg-page);
+    color: var(--brand-black);
+    overflow: hidden;
+    /* Hide scrollbar on body, handle in containers */
 }
 
 /* ===== DESKTOP LAYOUT ===== */
 .results-page-game {
     height: 100vh;
     width: 100vw;
-    background: var(--res-bg);
+    background: var(--bg-page);
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: auto;
+    padding: 20px;
 }
 
 .victory-card {
-    background: var(--res-card-bg);
-    width: 95%;
+    background: var(--bg-card);
+    width: 100%;
     max-width: 1200px;
     height: 90vh;
-    max-height: 700px;
-    border-radius: 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    padding: 0;
+    max-height: 800px;
+    border-radius: 32px;
+    box-shadow: var(--shadow-soft);
     display: grid;
-    grid-template-columns: 1fr 360px 1fr;
+    grid-template-columns: 1fr 400px 1fr;
     overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* ===== COLUMNS ===== */
 .side-column {
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: var(--brand-mint);
+    /* Soft Mint for side panels */
     position: relative;
-}
-
-.left-panel {
-    border-right: 2px solid #e5e7eb;
+    border-right: 1px solid rgba(0, 166, 63, 0.1);
 }
 
 .right-panel {
-    border-left: 2px solid #e5e7eb;
+    border-right: none;
+    border-left: 1px solid rgba(0, 166, 63, 0.05);
+    background: #FFF1F2;
+    /* Very soft red tint for Antonyms for contrast, or stick to Mint/Cloud? User said Mint/Cloud. Let's stick to Mint but maybe varying opacity */
+    background: linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%);
+    /* Neutral Cloud Gray for Right */
 }
 
 .center-panel {
-    padding: 20px 10px;
+    background: var(--brand-white);
+    padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 24px;
     overflow-y: auto;
+    z-index: 10;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.03);
+    /* Lift center panel */
 }
 
-/* ===== PANEL HEADERS - Game UI Style ===== */
+/* ===== PANEL HEADERS ===== */
 .panel-header {
-    font-size: 0.95rem;
-    font-weight: 900;
-    letter-spacing: 2px;
-    padding: 16px 20px;
-    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    padding: 16px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     flex-shrink: 0;
     text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    transition: all 0.3s ease;
-}
-
-.panel-header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transform: rotate(45deg);
-    animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-    0% {
-        transform: translateX(-100%) translateY(-100%) rotate(45deg);
-    }
-
-    100% {
-        transform: translateX(100%) translateY(100%) rotate(45deg);
-    }
-}
-
-.panel-header i {
-    font-size: 1.3rem;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    background: var(--brand-white);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .theme-green {
-    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-    color: white;
-    border: 3px solid #34d399;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.theme-green:hover {
-    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
+    color: var(--brand-green);
+    border: 1px solid rgba(0, 166, 63, 0.2);
 }
 
 .theme-red {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
-    color: white;
-    border: 3px solid #f87171;
-    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    color: var(--sem-error);
+    border: 1px solid rgba(250, 96, 96, 0.2);
 }
 
-.theme-red:hover {
-    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-
-/* ===== WORD LISTS - Game Card Style ===== */
+/* ===== WORD LISTS ===== */
 .word-list-scroll {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding-right: 8px;
+    padding-right: 4px;
 }
 
 .word-row {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    padding: 16px 18px;
-    border-radius: 14px;
+    background: var(--brand-white);
+    padding: 16px 20px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    border: 2px solid transparent;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    cursor: pointer;
-}
-
-.word-row::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    border-radius: 14px 0 0 14px;
-    transition: width 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+    cursor: default;
+    color: var(--brand-cool);
 }
 
 .word-row:hover {
-    transform: translateX(6px) scale(1.02);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.06);
 }
 
+/* Correct Words (Green) */
 .row-green {
-    border-color: #a7f3d0;
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #ffffff 100%);
-    color: #065f46;
-}
-
-.row-green::before {
-    background: linear-gradient(180deg, #10b981, #059669);
-}
-
-.row-green:hover {
-    border-color: #6ee7b7;
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-}
-
-.row-green:hover::before {
-    width: 8px;
-}
-
-.row-red {
-    border-color: #fecaca;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #ffffff 100%);
-    color: #991b1b;
-}
-
-.row-red::before {
-    background: linear-gradient(180deg, #ef4444, #dc2626);
-}
-
-.row-red:hover {
-    border-color: #fca5a5;
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.25);
-}
-
-.row-red:hover::before {
-    width: 8px;
-}
-
-.word-row i {
-    font-size: 1.3rem;
-    font-weight: 900;
-    flex-shrink: 0;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.1));
-    transition: transform 0.3s ease;
-}
-
-.word-row:hover i {
-    transform: scale(1.15) rotate(5deg);
+    border-left: 4px solid var(--brand-green);
+    color: var(--brand-forest);
 }
 
 .row-green i {
-    color: #10b981;
+    color: var(--brand-green);
+}
+
+/* Wrong/Antonym Words (Red) */
+.row-red {
+    border-left: 4px solid var(--sem-error);
+    color: #991B1B;
 }
 
 .row-red i {
-    color: #ef4444;
-}
-
-.word-row span {
-    flex: 1;
-    letter-spacing: 0.4px;
-}
-
-.empty-text {
-    color: #94a3b8;
-    font-size: 1rem;
-    text-align: center;
-    padding: 40px 20px;
-    font-weight: 500;
-    opacity: 0.7;
+    color: var(--sem-error);
 }
 
 /* ===== CENTER PANEL ELEMENTS ===== */
 .level-badge {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-    color: white;
-    font-size: 0.75rem;
+    background: var(--brand-cloud);
+    color: var(--brand-slate);
+    font-size: 0.7rem;
     font-weight: 700;
-    padding: 6px 16px;
+    padding: 6px 12px;
     border-radius: 20px;
     letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid #E5E7EB;
 }
 
 .victory-title {
-    font-size: 1.75rem;
+    font-size: 2.5rem;
+    /* Larger */
     font-weight: 900;
-    color: #1e293b;
+    color: var(--brand-black);
     margin: 0;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    text-align: center;
 }
 
 /* ===== SCORE METER ===== */
 .score-meter-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+    position: relative;
+    margin: 10px 0;
 }
 
 .score-meter-container {
+    width: 200px;
+    height: 200px;
     position: relative;
-    width: 180px;
-    height: 180px;
 }
 
 .score-svg {
@@ -303,16 +220,17 @@ body {
 }
 
 .meter-bg {
-    fill: none;
-    stroke: #e5e7eb;
+    stroke: var(--brand-mint);
+    /* Soft Mint Trace */
     stroke-width: 12;
 }
 
 .meter-progress {
-    fill: none;
+    stroke: var(--brand-green);
+    /* Primary Green */
     stroke-width: 12;
     stroke-linecap: round;
-    transition: stroke-dashoffset 1.5s ease, stroke 0.3s ease;
+    transition: stroke-dashoffset 1.5s ease;
 }
 
 .score-value-wrapper {
@@ -325,97 +243,108 @@ body {
 
 .score-label-small {
     display: block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #64748b;
-    letter-spacing: 1px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brand-slate);
+    letter-spacing: 1.5px;
     margin-bottom: 4px;
 }
 
 .score-number-big {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
     font-weight: 900;
-    display: block;
+    color: var(--brand-black);
+    line-height: 1;
 }
 
 /* ===== STATS ===== */
 .stats-row {
     display: flex;
-    gap: 16px;
-    margin-bottom: 8px;
+    gap: 20px;
+    width: 100%;
+    justify-content: center;
 }
 
 .stat-mini {
-    background: #f1f5f9;
-    padding: 10px 16px;
-    border-radius: 12px;
+    background: var(--brand-cloud);
+    /* Cloud Gray */
+    padding: 12px 24px;
+    border-radius: 16px;
     text-align: center;
+    flex: 1;
 }
 
 .stat-mini-label {
     display: block;
     font-size: 0.7rem;
-    font-weight: 600;
-    color: #64748b;
+    font-weight: 700;
+    color: var(--brand-slate);
     letter-spacing: 0.5px;
     margin-bottom: 4px;
+    text-transform: uppercase;
 }
 
 .stat-mini-value {
     display: block;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--brand-black);
 }
 
 /* ===== BUTTONS ===== */
 .btn-main-action {
     width: 100%;
-    max-width: 300px;
-    padding: 14px;
+    padding: 16px;
     font-size: 1.1rem;
     font-weight: 700;
-    color: white;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: var(--brand-white);
+    background: var(--brand-green);
+    /* Primary Green */
     border: none;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 166, 63, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 10px;
 }
 
 .btn-main-action:hover {
+    background: var(--brand-forest);
+    /* Deep Forest Green */
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 166, 63, 0.3);
 }
 
 .sub-actions {
     display: flex;
     gap: 12px;
-    margin-bottom: 8px;
+    width: 100%;
 }
 
 .btn-sub-action {
     flex: 1;
-    padding: 10px;
-    font-size: 0.9rem;
+    padding: 12px;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #3b82f6;
-    background: white;
-    border: 2px solid #3b82f6;
-    border-radius: 10px;
+    color: var(--brand-black);
+    background: var(--brand-white);
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-sub-action:hover {
-    background: #3b82f6;
-    color: white;
+    border-color: var(--brand-black);
+    background: var(--brand-cloud);
 }
 
 .btn-link-exit {
     background: none;
     border: none;
-    color: #64748b;
+    color: var(--brand-slate);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -424,200 +353,99 @@ body {
 }
 
 .btn-link-exit:hover {
-    color: #1e293b;
+    color: var(--sem-error);
 }
 
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 900px) {
     body {
         overflow-y: auto;
+        background: var(--brand-white);
     }
 
     .results-page-game {
-        min-height: 100vh;
         height: auto;
-        overflow: visible;
+        min-height: 100vh;
+        display: block;
         padding: 0;
+        overflow-y: auto;
     }
 
     .victory-card {
+        max-width: none;
+        height: auto;
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
         display: flex;
         flex-direction: column;
-        min-height: 100vh;
-        height: auto;
-        width: 100%;
-        margin: 0;
-        border-radius: 0;
-        max-height: none;
-        overflow: visible;
-        /* Allow content to flow */
+        border: none;
+        padding-bottom: 40px;
     }
 
-    /* Center panel compact at top */
+    /* 1. Header & Score Section (Top) */
     .center-panel {
         order: 1;
         width: 100%;
-        flex-shrink: 0;
-        border-bottom: 2px solid #e5e7eb;
-        padding: 60px 12px 12px 12px;
-        gap: 8px;
+        padding: 40px 20px 20px;
+        background: var(--brand-white);
+        border-bottom: 1px solid #F1F5F9;
+        box-shadow: none;
+        gap: 16px;
     }
 
-    /* Word boxes wrapper - side by side with flex */
-    .left-panel,
-    .right-panel {
-        flex: 1 1 0;
-        min-width: 0;
-        width: 50%;
-        min-height: 300px;
+    .score-meter-container {
+        width: 150px;
+        height: 150px;
+    }
+
+    .score-number-big {
+        font-size: 2.5rem;
+    }
+
+    .victory-title {
+        font-size: 2rem;
+    }
+
+    /* 2. Side Panels (Side-by-Side) */
+    .side-column {
+        width: 100%;
         height: auto;
-        /* Let it grow */
-        display: flex;
-        flex-direction: column;
-        overflow: visible;
-        /* No clipping */
-        padding: 10px;
-        margin: 0;
-        background: #f9fafb;
-        box-sizing: border-box;
+        padding: 20px;
+        background: var(--brand-cloud);
+        border: none;
     }
 
     .left-panel {
         order: 2;
-        border-right: 1px solid #e5e7eb;
-        border-bottom: none;
+        background: var(--brand-mint);
+        /* Synonyms on Mint */
     }
 
     .right-panel {
-        order: 2;
-        border-left: 1px solid #e5e7eb;
-        border-bottom: none;
+        order: 3;
+        background: #FFF5F5;
+        /* Antonyms slightly red tinted or plain cloud */
     }
 
-    /* Create a row container for word boxes using flex-wrap */
-    .victory-card {
-        flex-wrap: wrap;
-        flex-direction: row;
-    }
-
-    .victory-card>.center-panel {
-        flex-basis: 100%;
-    }
-
-    /* Compact panel headers */
     .panel-header {
-        font-size: 0.65rem;
-        padding: 8px 10px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        gap: 4px;
-        letter-spacing: 1px;
+        background: rgba(255, 255, 255, 0.8);
+        font-size: 0.8rem;
+        padding: 10px;
     }
 
-    .panel-header i {
-        font-size: 0.9rem;
-    }
-
-    /* Word lists scroll within fixed height */
     .word-list-scroll {
-        flex: 1;
-        overflow-y: visible;
-        /* Disable inner scroll */
-        -webkit-overflow-scrolling: touch;
-        gap: 6px;
-        padding-right: 2px;
+        overflow: visible;
+        /* Show all items */
         height: auto;
     }
 
-    /* Compact word rows */
-    .word-row {
-        padding: 8px 10px;
-        gap: 6px;
-        font-size: 0.75rem;
-        border-radius: 6px;
-        border-left-width: 3px;
-    }
+    /* 3. Button Section (Bottom of Center Panel or Sticky?) */
+    /* Currently Center Panel is Order 1, so buttons are at top. 
+       Let's move buttons to bottom for mobile? */
 
-    .word-row i {
-        font-size: 0.85rem;
-    }
-
-    .empty-text {
-        font-size: 0.75rem;
-        padding: 15px 10px;
-    }
-
-    /* Compact center elements */
-    .level-badge {
-        font-size: 0.65rem;
-        padding: 4px 10px;
-    }
-
-    .victory-title {
-        font-size: 1.1rem;
-    }
-
-    .score-meter-container {
-        width: 120px;
-        height: 120px;
-    }
-
-    .score-number-big {
-        font-size: 1.8rem;
-    }
-
-    .score-label-small {
-        font-size: 0.6rem;
-    }
-
-    .stats-row {
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-
-    .stat-mini {
-        padding: 6px 10px;
-    }
-
-    .stat-mini-label {
-        font-size: 0.6rem;
-    }
-
-    .stat-mini-value {
-        font-size: 0.95rem;
-    }
-
-    .btn-main-action {
-        padding: 10px;
-        font-size: 0.95rem;
-        max-width: 250px;
-    }
-
-    .btn-sub-action {
-        padding: 8px 6px;
-        font-size: 0.75rem;
-    }
-
-    .btn-link-exit {
-        font-size: 0.8rem;
-    }
-}
-
-/* ===== SCROLLBAR STYLING ===== */
-.word-list-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-
-.word-list-scroll::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.word-list-scroll::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.word-list-scroll::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    /* Actually with Flex Column, Center is Top. 
+       We might want Score -> Words -> Buttons.
+       But standard mobile result page usually has Score -> Action. 
+       Then Review below. */
 }
