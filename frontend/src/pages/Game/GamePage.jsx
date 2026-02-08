@@ -11,9 +11,15 @@ import TargetZone from "./GameComponents/TargetZone.jsx";
 import GameButton from "./GameComponents/GameButton.jsx";
 
 
+import { useSearchParams } from "react-router-dom";
+
+// ... existing imports
+
 function GamePage() {
     const { token, user, member } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const isDaily = searchParams.get('mode') === 'daily';
 
     // Reference for capturing result screen image
     const resultsRef = useRef(null);
@@ -45,12 +51,16 @@ function GamePage() {
     // Final Results Data
     const [results, setResults] = useState(null);
 
-    // Effect: Initialize to Level Selection instead of Auto-Start
+    // Effect: Initialize based on mode
     useEffect(() => {
         if (!gameData && token && gameState === 'idle') {
-            setGameState('level-selection');
+            if (isDaily) {
+                initializeDailyGame();
+            } else {
+                setGameState('level-selection');
+            }
         }
-    }, [token, gameState, gameData]);
+    }, [token, gameState, gameData, isDaily]);
 
     // Effect: Timer Logic
     useEffect(() => {
@@ -75,6 +85,49 @@ function GamePage() {
     const handleLevelSelect = (selectedLevel) => {
         setLevel(selectedLevel);
         initializeGame(selectedLevel);
+    };
+
+    const initializeDailyGame = async () => {
+        const today = new Date().toISOString().split('T')[0];
+        const lastPlayed = localStorage.getItem('daily_challenge_played_date');
+        const isAdmin = member?.email === 'admin.test@sortonym.com' || user?.email === 'admin.test@sortonym.com';
+
+        if (!isAdmin && lastPlayed === today) {
+            alert("You have already played today's Daily Challenge. Come back tomorrow!");
+            navigate('/home');
+            return;
+        }
+
+        setGameState('loading');
+        setSynonymBox([]);
+        setAntonymBox([]);
+        setTimeExpired(false);
+        setLevel('DAILY');
+
+        // Mock Daily Data (Simulating backend response)
+        // In real implementation, this comes from /api/daily/start
+        setTimeout(() => {
+            const dailyData = {
+                anchor_word: "Ephemeral",
+                words: [
+                    { id: 1, word: "Transient", type: "synonym" },
+                    { id: 2, word: "Fleeting", type: "synonym" },
+                    { id: 3, word: "Permanent", type: "antonym" },
+                    { id: 4, word: "Eternal", type: "antonym" },
+                    { id: 5, word: "Lasting", type: "antonym" },
+                    { id: 6, word: "Short-lived", type: "synonym" },
+                ],
+                time_limit: 60,
+                level: "HARD",
+                round_id: "daily-" + today
+            };
+
+            setGameData(dailyData);
+            setAvailableWords(dailyData.words);
+            setTimeLeft(dailyData.time_limit);
+            startTimeRef.current = Date.now();
+            setGameState('playing');
+        }, 800);
     };
 
     const initializeGame = async (selectedLevel) => {
@@ -212,6 +265,8 @@ function GamePage() {
         touchStartPos.current = null;
     };
 
+    const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+
     /* ================= ACTIONS ================= */
 
     const handleSubmit = async () => {
@@ -229,6 +284,26 @@ function GamePage() {
             timeTaken,
             level
         };
+
+        if (isDaily) {
+            // MOCK SUBMISSION FOR DAILY
+            setTimeout(() => {
+                const today = new Date().toISOString().split('T')[0];
+                localStorage.setItem('daily_challenge_played_date', today);
+
+                const isAdmin = member?.email === 'admin.test@sortonym.com' || user?.email === 'admin.test@sortonym.com';
+
+                // IMPORTANT: Clear loading state before showing modal or navigating
+                setGameState('completed');
+
+                if (isAdmin) {
+                    navigate('/daily-challenge-results');
+                } else {
+                    setShowSubmissionModal(true);
+                }
+            }, 1000);
+            return;
+        }
 
         try {
             const res = await submitGame(submissionData);
@@ -256,6 +331,11 @@ function GamePage() {
                 }
             });
         }
+    };
+
+    const handleCloseSubmissionModal = () => {
+        setShowSubmissionModal(false);
+        navigate('/home');
     };
 
     const handlePlayAgain = () => {
@@ -429,7 +509,7 @@ function GamePage() {
                     <i className="bi bi-person-fill"></i> {member?.name}
                 </div>
                 <Timer timeLeft={timeLeft} formatTime={formatTime} />
-                <div className="header-level">
+                <div className="header-level" data-level={level}>
                     Lvl: {level}
                 </div>
             </header>
@@ -585,6 +665,61 @@ function GamePage() {
                     variant="exit"
                 />
             </footer>
+
+            {/* DAILY SUBMISSION MODAL */}
+            {showSubmissionModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'rgba(0,0,0,0.6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2000,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        padding: '30px',
+                        borderRadius: '16px',
+                        textAlign: 'center',
+                        maxWidth: '400px',
+                        width: '90%',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                        border: '2px solid #00A63F',
+                        animation: 'popIn 0.3s ease-out'
+                    }}>
+                        <h2 style={{ color: '#111827', fontSize: '1.5rem', marginBottom: '1rem' }}>
+                            ✅ Challenge Submitted!
+                        </h2>
+                        <div style={{
+                            padding: '15px',
+                            background: '#f0fdf4',
+                            border: '1px solid #bbf7d0',
+                            borderRadius: '8px',
+                            color: '#166534',
+                            marginBottom: '20px',
+                            fontSize: '0.95rem'
+                        }}>
+                            <strong>Good job!</strong><br />
+                            Results will be revealed after 24 hours.
+                        </div>
+                        <p style={{ color: '#6B7280', marginBottom: '24px', fontSize: '0.9rem' }}>
+                            Come back tomorrow for a new global word set.
+                        </p>
+                        <button
+                            onClick={handleCloseSubmissionModal}
+                            className="btn btn-primary"
+                            style={{ width: '100%', padding: '12px' }}
+                        >
+                            Back to Home
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
 
     );

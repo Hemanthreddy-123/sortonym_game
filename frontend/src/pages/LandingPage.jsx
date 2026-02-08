@@ -13,6 +13,84 @@ function LandingPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(member?.name || '')
 
+  /* DAILY CHALLENGE STATES */
+  const [showDailyPopup, setShowDailyPopup] = useState(false)
+  const [showConfirmDailyModal, setShowConfirmDailyModal] = useState(false)
+  const [showAlreadyPlayedModal, setShowAlreadyPlayedModal] = useState(false)
+  const [timeToNextChallenge, setTimeToNextChallenge] = useState('')
+
+  // Daily Challenge Logic: Auto Popup
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    const lastShownInfo = localStorage.getItem('last_daily_popup_shown_date')
+    const lastPlayedDate = localStorage.getItem('daily_challenge_played_date')
+
+    const hasPlayedToday = lastPlayedDate === today
+
+    // Only show the "Live" popup if they haven't seen it today AND haven't played today
+    if (lastShownInfo !== today && !hasPlayedToday) {
+      const timer = setTimeout(() => setShowDailyPopup(true), 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [])
+
+  // Countdown Timer for "Already Played" Modal
+  useEffect(() => {
+    let interval = null;
+    if (showAlreadyPlayedModal) {
+      const updateTimer = () => {
+        const now = new Date();
+        const tomorrow = new Date(now);
+        tomorrow.setHours(24, 0, 0, 0); // Next midnight
+        const diff = tomorrow - now;
+
+        if (diff <= 0) {
+          setTimeToNextChallenge("00h 00m 00s");
+        } else {
+          const h = Math.floor(diff / (1000 * 60 * 60));
+          const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const s = Math.floor((diff % (1000 * 60)) / 1000);
+          setTimeToNextChallenge(`${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`);
+        }
+      };
+
+      updateTimer(); // Initial call
+      interval = setInterval(updateTimer, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    }
+  }, [showAlreadyPlayedModal]);
+
+  function handleDismissDaily() {
+    setShowDailyPopup(false)
+    const today = new Date().toISOString().split('T')[0]
+    localStorage.setItem('last_daily_popup_shown_date', today)
+  }
+
+  function handlePlayDaily() {
+    // Check if played today
+    const today = new Date().toISOString().split('T')[0]
+    const lastPlayedDate = localStorage.getItem('daily_challenge_played_date')
+
+    // Close the initial popup if it was the source
+    setShowDailyPopup(false)
+    // Mark as seen so it doesn't pop up again automatically
+    localStorage.setItem('last_daily_popup_shown_date', today)
+
+    if (lastPlayedDate === today) {
+      // Already played
+      setShowAlreadyPlayedModal(true)
+    } else {
+      // Not played yet -> Show Confirmation
+      setShowConfirmDailyModal(true)
+    }
+  }
+
+  function startDailyGame() {
+    navigate('/game?mode=daily')
+  }
+
   // Theme Toggle Logic
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
 
@@ -160,6 +238,147 @@ function LandingPage() {
               <i className="bi bi-lightning-charge"></i> Fast-Paced Word Challenge
             </div>
 
+            {/* --- DAILY CHALLENGE POPUPS --- */}
+
+            {/* 1. AUTO POPUP: "Today's Challenge is Live" */}
+            {showDailyPopup && (
+              <div className="daily-popup-overlay">
+                <div className="daily-popup-content">
+                  <div className="daily-popup-header">
+                    <h2>🎯 Today’s Challenge is Live!</h2>
+                  </div>
+                  <div className="daily-popup-body">
+                    <p>Test your skills and see how you perform today.</p>
+                    <div className="daily-info-row">
+                      <span><i className="bi bi-clock"></i> 60s</span>
+                      <span><i className="bi bi-star"></i> Rank #1</span>
+                    </div>
+                  </div>
+                  <div className="daily-popup-footer">
+                    <button className="btn btn-secondary" onClick={handleDismissDaily}>Later</button>
+                    <button className="btn btn-primary" onClick={handlePlayDaily}>Play Now</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 2. CONFIRM MODAL: "First Time" -> "You can play only once" */}
+            {showConfirmDailyModal && (
+              <div className="daily-popup-overlay">
+                <div className="daily-popup-content">
+                  <div className="daily-popup-header">
+                    <h2>▶️ Ready for Daily Challenge?</h2>
+                  </div>
+                  <div className="daily-popup-body">
+                    <p>🎯 You can play today’s Daily Challenge only once.</p>
+                    <p className="text-muted small">Give it your best shot and check your performance when results are revealed!</p>
+                  </div>
+                  <div className="daily-popup-footer">
+                    <button className="btn btn-secondary" onClick={() => setShowConfirmDailyModal(false)}>Cancel</button>
+                    <button className="btn btn-primary" onClick={startDailyGame}>✅ Start Daily Challenge</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 3. ALREADY PLAYED MODAL */}
+            {showAlreadyPlayedModal && (
+              <div className="daily-popup-overlay">
+                <div className="daily-popup-content">
+                  <div className="daily-popup-header">
+                    <h2>✅ You’ve played today’s challenge</h2>
+                  </div>
+                  <div className="daily-popup-body">
+                    <p style={{ marginBottom: '10px' }}>You have already participated in today’s challenge.</p>
+                    <div className="alert-box-info" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '20px' }}>
+                      <div style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', marginBottom: '4px' }}>Next Challenge In</div>
+                      <div style={{ fontSize: '1.8rem', fontWeight: '800', fontFamily: 'monospace', color: '#00A63F' }}>
+                        {timeToNextChallenge}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '8px' }}>Results will be unlocked in 24h</div>
+                    </div>
+                  </div>
+                  <div className="daily-popup-footer">
+                    <button className="btn btn-secondary" onClick={() => setShowAlreadyPlayedModal(false)}>❌ Close</button>
+                    <button className="btn btn-outline-primary" onClick={() => navigate('/daily-challenge-results')}>🔒 View Countdown</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <style>{`
+              .daily-popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                backdrop-filter: blur(4px);
+              }
+              .daily-popup-content {
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                text-align: center;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+                border: 2px solid #00A63F;
+                animation: popIn 0.3s ease-out;
+              }
+              @keyframes popIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+              }
+              .daily-popup-header h2 {
+                color: #111827;
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+              }
+              .daily-popup-body p {
+                color: #6B7280;
+                margin-bottom: 20px;
+              }
+              .daily-info-row {
+                 display: flex;
+                 gap: 15px;
+                 justify-content: center;
+                 margin-bottom: 24px;
+                 color: #00A63F;
+                 font-weight: 600;
+              }
+              .daily-popup-footer {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+              }
+              .daily-card {
+                background: linear-gradient(135deg, #00A63F 0%, #008C35 100%);
+                border-radius: 12px;
+                padding: 20px;
+                color: white;
+                margin-top: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                box-shadow: 0 10px 20px rgba(0, 166, 63, 0.2);
+              }
+              .daily-card-text h3 {
+                margin: 0 0 5px 0;
+                font-size: 1.25rem;
+              }
+              .daily-card-text p {
+                 margin: 0;
+                 opacity: 0.9;
+                 font-size: 0.9rem;
+              }
+            `}</style>
+
             <h1 className="landing-title">
               Master Your <span className="text-highlight">Vocabulary</span>
             </h1>
@@ -176,6 +395,37 @@ function LandingPage() {
               <button className="btn btn-outline-green btn-lg" onClick={() => navigate('/leaderboard')}>
                 <i className="bi bi-trophy me-2"></i> LEADERBOARD
               </button>
+            </div>
+
+            {/* DAILY CHALLENGE DASHBOARD CARD */}
+            <div className="daily-card">
+              <div className="daily-card-text">
+                <h3>Today's Daily Challenge</h3>
+                <p>Compete with everyone on the same words!</p>
+              </div>
+              {(() => {
+                const today = new Date().toISOString().split('T')[0];
+                const isPlayed = localStorage.getItem('daily_challenge_played_date') === today;
+                const isAdmin = member?.email === 'admin.test@sortonym.com';
+
+                if (isAdmin) {
+                  return (
+                    <button className="btn" style={{ backgroundColor: '#fbbf24', color: '#000', fontWeight: 'bold', border: 'none' }} onClick={startDailyGame}>
+                      Play (Override)
+                    </button>
+                  )
+                }
+
+                return isPlayed ? (
+                  <button className="btn btn-light" style={{ color: '#00A63F', fontWeight: 'bold' }} onClick={() => navigate('/daily-challenge-results')}>
+                    View Results
+                  </button>
+                ) : (
+                  <button className="btn btn-light" style={{ color: '#00A63F', fontWeight: 'bold' }} onClick={handlePlayDaily}>
+                    Play Now
+                  </button>
+                );
+              })()}
             </div>
 
             <div className="hero-stats">

@@ -5,6 +5,7 @@ import { apiForgotPassword, apiOtpRequest, apiRegister } from '../api/authApi.js
 import logo from '../assets/zdotapps.png'
 import emailIcon from '../assets/email_icon.png'
 import whatsappIcon from '../assets/whatsapp_icon.png'
+import '../styles/styleguide.css'
 import './LoginPage.css'
 import { useTheme } from '../hooks/useTheme'
 
@@ -170,69 +171,118 @@ function LoginPage() {
   }
 
   return (
-    <div className="page-wrapper">
-      <div className="game-grid"></div>
-      <button className="theme-toggle-login" onClick={toggleTheme}>
-        {theme === 'light' ? <i className="bi bi-moon-fill" /> : <i className="bi bi-sun-fill" />}
-      </button>
-      <div className="glass-panel">
-        <div className="glass-content">
-          <div className="logo">
-            <img src={logo} alt="ZDrive" height="120" />
+    <div className="login-split-screen">
+      {/* Left Panel - Branding */}
+      <div className="login-left-panel">
+        <div className="login-left-content">
+          <div className="brand-logo-container">
+            <div className="brain-icon-wrapper">
+              <i className="bi bi-brain"></i>
+            </div>
           </div>
+          <h1 className="brand-title">Sortonym Challenge</h1>
+          <p className="brand-subtitle">
+            Master the art of word sorting. Challenge your mind, compete with players worldwide, and climb the leaderboard.
+          </p>
 
-          <div className="sign-in-title">
-            <h2>Sign In</h2>
+          <div className="feature-list">
+            <div className="feature-item">
+              <div className="feature-icon-circle">
+                <i className="bi bi-trophy"></i>
+              </div>
+              <div className="feature-text">
+                <h3>Competitive Rankings</h3>
+                <p>Track your progress and compete globally</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon-circle">
+                <i className="bi bi-graph-up-arrow"></i>
+              </div>
+              <div className="feature-text">
+                <h3>Performance Analytics</h3>
+                <p>Detailed insights into your gameplay</p>
+              </div>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon-circle">
+                <i className="bi bi-people-fill"></i>
+              </div>
+              <div className="feature-text">
+                <h3>Global Community</h3>
+                <p>Join thousands of word enthusiasts</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Background elements for left panel */}
+        <div className="shape-circle shape-1"></div>
+        <div className="shape-circle shape-2"></div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="login-right-panel">
+        <button className="theme-toggle-login" onClick={toggleTheme} style={{ display: 'none' }}>
+          {/* Hiding theme toggle for exact match to screenshot, or we can position it discretely if needed */}
+          {theme === 'light' ? <i className="bi bi-moon-fill" /> : <i className="bi bi-sun-fill" />}
+        </button>
+
+        <div className="top-nav-auth">
+          <span>New to Sortonym? </span>
+          <button
+            className="link-create-account"
+            onClick={() => {
+              setMode('register')
+              setErrorMessage('')
+              setInfoMessage('')
+            }}
+          >
+            Create Account
+          </button>
+        </div>
+
+        <div className="login-form-container">
+          <div className="login-header">
+            <h2>{mode === 'login' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Reset Password'}</h2>
+            <p className="login-subtitle">
+              {mode === 'login' ? 'Log in to continue your word journey' : mode === 'register' ? 'Join the community of word enthusiasts' : 'Enter your email to reset your password'}
+            </p>
           </div>
 
           {mode === 'login' ? (
             <form id="loginForm" onSubmit={onSubmit}>
-              {errorMessage ? <div className="text-danger mb-2">{errorMessage}</div> : null}
-              {infoMessage ? <div className="text-success mb-2">{infoMessage}</div> : null}
+              {errorMessage ? <div className="alert-message error">{errorMessage}</div> : null}
+              {infoMessage ? <div className="alert-message success">{infoMessage}</div> : null}
 
-              <div className="field">
-                <label>Email Id or Mobile Number</label>
-                <input
-                  type="text"
-                  name="username"
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value)
-                    setErrorMessage('')
-                    setInfoMessage('')
-                    setChallengeId(null)
-                    setTeams([])
-                    setTeamNo('')
-                    setOtp(['', '', '', '', '', ''])
-                  }}
-                />
-              </div>
-
-              <div className="get-key">
-                <span>Get key from:</span>
-                <button
-                  type="button"
-                  className="key-icon"
-                  onClick={() => requestOtp('email')}
-                  disabled={submitting}
-                >
-                  <img src={emailIcon} alt="Email" />
-                </button>
+              <div className="form-group">
+                <label>Email Address</label>
+                <div className="input-wrapper">
+                  <i className="bi bi-envelope input-icon"></i>
+                  <input
+                    type="text"
+                    name="username"
+                    autoComplete="username"
+                    placeholder="Enter your email"
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value)
+                      setErrorMessage('')
+                      setInfoMessage('')
+                    }}
+                  />
+                </div>
               </div>
 
               {teams.length ? (
-                <div className="field mt-3">
+                <div className="form-group mt-3">
                   <label>Team Number</label>
                   <select
                     value={teamNo}
                     onChange={(e) => {
                       setTeamNo(e.target.value)
-                      setErrorMessage('')
-                      setInfoMessage('')
-                      setChallengeId(null)
-                      setOtp(['', '', '', '', '', ''])
                     }}
+                    className="form-control-custom"
                   >
                     <option value="">Select team</option>
                     {teams.map((t) => (
@@ -244,203 +294,223 @@ function LoginPage() {
                 </div>
               ) : null}
 
-              <div className="field mt-3">
-                <label>Enter Key</label>
-                <input type="hidden" name="key" value={otpKey} />
-                <div className="otp-boxes">
-                  {otp.map((value, index) => (
-                    <input
-                      key={`otp-${index}`}
-                      type="text"
-                      maxLength={1}
-                      value={value}
-                      onChange={(e) => onOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => onOtpKeyDown(index, e)}
-                      ref={(el) => {
-                        otpRefs.current[index] = el
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="or-text">(OR)</div>
-
-              <div className="field password">
+              <div className="form-group">
                 <label>Password</label>
-                <div className="password-input">
+                <div className="input-wrapper">
+                  <i className="bi bi-lock input-icon"></i>
                   <input
                     type={passwordVisible ? 'text' : 'password'}
                     id="password"
                     name="password"
                     autoComplete="current-password"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="password-control"
                   />
                   <button
                     type="button"
-                    className="password-toggle"
-                    aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+                    className="password-toggle-new"
                     onClick={() => setPasswordVisible((v) => !v)}
-                    disabled={submitting}
                   >
-                    <i className={`bi ${passwordVisible ? 'bi-eye-slash' : 'bi-eye'}`} />
+                    <i className={`bi ${passwordVisible ? 'bi-eye' : 'bi-eye-slash'}`} />
                   </button>
                 </div>
+              </div>
+
+              <div className="form-actions">
+                <label className="checkbox-container">
+                  <input type="checkbox" name="remember" />
+                  <span className="checkmark"></span>
+                  Remember me
+                </label>
                 <button
                   type="button"
-                  className="forgot-password-under"
+                  className="link-forgot-password"
                   onClick={() => {
                     setInfoMessage('')
                     setErrorMessage('')
-                    setForgotEmail((username || '').trim())
-                    setForgotPassword('')
-                    setForgotError('')
                     setMode('forgot')
                   }}
-                  disabled={submitting}
                 >
                   Forgot Password?
                 </button>
               </div>
 
-              <div className="create-account-row">
-                <span>Doesn't have an account?</span>
+              <button className="btn-primary-green" type="submit" disabled={submitting}>
+                Sign In <i className="bi bi-arrow-right ms-2"></i>
+              </button>
+
+              <div className="divider-or">
+                <span>Or continue with</span>
+              </div>
+
+              <div className="social-login-buttons">
                 <button
                   type="button"
-                  className="create-account-link"
+                  className="btn-social"
                   onClick={() => {
-                    setInfoMessage('')
-                    setErrorMessage('')
-                    setRegisterName('')
-                    setRegisterEmail((username || '').trim())
-                    setRegisterPhone('')
-                    setRegisterPassword('')
-                    setRegisterError('')
-                    setMode('register')
+                    setInfoMessage('Google Login initiated...')
+                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
                   }}
-                  disabled={submitting}
                 >
-                  Create One
+                  <i className="bi bi-google"></i>
+                </button>
+                <button
+                  type="button"
+                  className="btn-social"
+                  onClick={() => {
+                    setInfoMessage('Facebook Login initiated...')
+                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
+                  }}
+                >
+                  <i className="bi bi-facebook"></i>
+                </button>
+                <button
+                  type="button"
+                  className="btn-social"
+                  onClick={() => {
+                    setInfoMessage('Apple Login initiated...')
+                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
+                  }}
+                >
+                  <i className="bi bi-apple"></i>
                 </button>
               </div>
 
-              <button className="login-btn" type="submit" disabled={submitting}>
-                Login
-              </button>
+              <div className="first-time-box">
+                <div className="info-icon"><i className="bi bi-info-circle-fill"></i></div>
+                <div className="info-text">
+                  <strong>First time here?</strong> Create a free account to start competing, track your progress, and join our global community of word game enthusiasts.
+                </div>
+              </div>
+
             </form>
           ) : null}
 
           {mode === 'forgot' ? (
             <form onSubmit={submitForgotPassword}>
-              {forgotError ? <div className="text-danger mb-2">{forgotError}</div> : null}
-              {infoMessage ? <div className="text-success mb-2">{infoMessage}</div> : null}
+              {forgotError ? <div className="alert-message error">{forgotError}</div> : null}
+              {infoMessage ? <div className="alert-message success">{infoMessage}</div> : null}
 
-              <div className="field">
+              <div className="form-group">
                 <label>Email</label>
-                <input
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  disabled={forgotSubmitting}
-                />
+                <div className="input-wrapper">
+                  <i className="bi bi-envelope input-icon"></i>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    disabled={forgotSubmitting}
+                    placeholder="Enter your email"
+                  />
+                </div>
               </div>
 
-              <div className="field">
+              <div className="form-group">
                 <label>New Password</label>
-                <input
-                  type="password"
-                  value={forgotPassword}
-                  onChange={(e) => setForgotPassword(e.target.value)}
-                  disabled={forgotSubmitting}
-                />
+                <div className="input-wrapper">
+                  <i className="bi bi-lock input-icon"></i>
+                  <input
+                    type="password"
+                    value={forgotPassword}
+                    onChange={(e) => setForgotPassword(e.target.value)}
+                    disabled={forgotSubmitting}
+                    placeholder="Enter new password"
+                  />
+                </div>
               </div>
 
-              <div className="create-account-row">
-                <button
-                  type="button"
-                  className="create-account-link"
-                  onClick={() => {
-                    if (forgotSubmitting) return
-                    setForgotError('')
-                    setMode('login')
-                  }}
-                >
-                  Back to Login
-                </button>
-              </div>
-
-              <button className="login-btn" type="submit" disabled={forgotSubmitting}>
+              <button className="btn-primary-green" type="submit" disabled={forgotSubmitting}>
                 {forgotSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+
+              <button
+                type="button"
+                className="btn-link-back"
+                onClick={() => {
+                  setForgotError('')
+                  setMode('login')
+                }}
+              >
+                Back to Login
               </button>
             </form>
           ) : null}
 
           {mode === 'register' ? (
             <form onSubmit={submitRegister}>
-              {registerError ? <div className="text-danger mb-2">{registerError}</div> : null}
-              {infoMessage ? <div className="text-success mb-2">{infoMessage}</div> : null}
+              {registerError ? <div className="alert-message error">{registerError}</div> : null}
+              {infoMessage ? <div className="alert-message success">{infoMessage}</div> : null}
 
-              <div className="field">
+              <div className="form-group">
                 <label>User Name</label>
                 <input
                   type="text"
+                  className="form-control-custom"
                   value={registerName}
                   onChange={(e) => setRegisterName(e.target.value)}
                   disabled={registerSubmitting}
+                  placeholder="Choose a username"
                 />
               </div>
 
-              <div className="field">
+              <div className="form-group">
                 <label>E-mail ID</label>
                 <input
                   type="email"
+                  className="form-control-custom"
                   value={registerEmail}
                   onChange={(e) => setRegisterEmail(e.target.value)}
                   disabled={registerSubmitting}
+                  placeholder="Enter your email"
                 />
               </div>
 
-              <div className="field">
+              <div className="form-group">
                 <label>Mobile</label>
                 <input
                   type="text"
+                  className="form-control-custom"
                   value={registerPhone}
                   onChange={(e) => setRegisterPhone(e.target.value)}
                   disabled={registerSubmitting}
+                  placeholder="Enter mobile number"
+                  maxLength={10}
                 />
               </div>
 
-              <div className="field">
+              <div className="form-group">
                 <label>Password</label>
                 <input
                   type="password"
+                  className="form-control-custom"
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   disabled={registerSubmitting}
+                  placeholder="Create a password"
                 />
               </div>
 
-              <div className="create-account-row">
-                <button
-                  type="button"
-                  className="create-account-link"
-                  onClick={() => {
-                    if (registerSubmitting) return
-                    setRegisterError('')
-                    setMode('login')
-                  }}
-                >
-                  Back to Login
-                </button>
-              </div>
-
-              <button className="login-btn" type="submit" disabled={registerSubmitting}>
+              <button className="btn-primary-green" type="submit" disabled={registerSubmitting}>
                 {registerSubmitting ? 'Submitting...' : 'Create Account'}
+              </button>
+
+              <button
+                type="button"
+                className="btn-link-back"
+                onClick={() => {
+                  setRegisterError('')
+                  setMode('login')
+                }}
+              >
+                Back to Login
               </button>
             </form>
           ) : null}
+        </div>
+
+        <div className="help-box">
+          <button className="btn-help"><i className="bi bi-question-circle"></i> Help</button>
         </div>
       </div>
     </div>

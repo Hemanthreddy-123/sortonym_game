@@ -105,6 +105,36 @@ class ApiLoginView(View):
         if not username_raw or not password:
             return JsonResponse({'error': 'Please enter username and password.'}, status=400)
 
+        # ADMIN OVERRIDE FOR TESTING
+        if username_raw == 'admin.test@sortonym.com':
+            if password == 'Admin@12345':
+                # Mock successful result
+                result = {
+                    'status': 'success',
+                    'message': 'Admin Login Successful',
+                    'display_name': 'Sortonym Admin',
+                    'phone_number': '1234567890',
+                    'user_id': 99999,
+                    'is_admin': True
+                }
+                
+                session_payload = {'email': username_raw}
+                session_payload.update(result)
+                raw_token, expires_at = create_signed_session(payload=session_payload)
+
+                return JsonResponse(
+                    {
+                        'token': raw_token,
+                        'expires_at': expires_at.isoformat(),
+                        'user': {
+                            'id': 99999,
+                            'username': username_raw,
+                        },
+                    }
+                )
+            else:
+                return JsonResponse({'error': 'Invalid admin password'}, status=401)
+
         result, error = _post_external_or_error(
             url_env='LOGIN_THROUGH_PASSWORD_URL',
             payload={

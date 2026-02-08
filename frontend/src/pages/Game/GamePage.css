@@ -76,6 +76,11 @@
     color: var(--slate-gray);
 }
 
+.header-level[data-level="DAILY"] {
+    color: #F59E0B;
+    /* Gold for Daily */
+}
+
 /* Anchor Word Section */
 .anchor-word-section {
     text-align: center;
