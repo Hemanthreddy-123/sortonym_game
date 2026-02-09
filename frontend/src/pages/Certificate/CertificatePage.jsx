@@ -15,61 +15,61 @@ const CertificatePage = React.forwardRef(({ member, level }, ref) => {
     return (
         <div ref={ref} className="certificate-snapshot-container">
             <div className="certificate-modern-wrapper">
-                {/* Decorative Corners */}
-                <div className="corner-decor top-left"></div>
-                <div className="corner-decor top-right"></div>
-                <div className="corner-decor bottom-left"></div>
-                <div className="corner-decor bottom-right"></div>
+                {/* Decorative Elements */}
+                <div className="geo-accent accent-circle-top"></div>
+                <div className="geo-accent accent-circle-bottom"></div>
 
                 <div className="cert-content-area">
-                    {/* Header */}
-                    <div className="cert-header-modern">
-                        <div className="app-logo-mark">
-                            <i className="bi bi-intersect"></i>
+                    {/* Header: Brand Name */}
+                    <div className="cert-header">
+                        <div className="brand-tag">
+                            <i className="bi bi-award-fill"></i> SORTONYM CHALLENGE
                         </div>
-                        <span className="app-name-tracking">SORTONYM CHALLENGE</span>
                     </div>
 
-                    {/* Main Title Block */}
-                    <div className="cert-title-block">
-                        <h2 className="title-top">CERTIFICATE</h2>
-                        <h1 className="title-main">OF ACHIEVEMENT</h1>
-                        <div className="title-divider"></div>
+                    {/* Title Section */}
+                    <div className="cert-title-group">
+                        <h2 className="cert-title-medium">CERTIFICATE</h2>
+                        <h1 className="cert-title-large">OF ACHIEVEMENT</h1>
                     </div>
 
-                    {/* Recipient */}
-                    <div className="cert-recipient-section">
-                        <p className="recipient-label">THIS CERTIFICATE IS AWARDED TO</p>
+                    {/* Recipient Section */}
+                    <div className="cert-recipient-group">
+                        <p className="recipient-intro">This certificate is awarded to</p>
                         <h3 className="recipient-name">{member?.name || 'Valued Player'}</h3>
                         <p className="recipient-body">
-                            For successfully completing the <strong>{level} LEVEL</strong><br />
-                            demonstrating speed, accuracy, and vocabulary mastery.
+                            For successfully completing the <strong>{level} LEVEL</strong>, demonstrating exceptional speed, accuracy, and vocabulary mastery.
                         </p>
                     </div>
 
-                    {/* Footer / Signature / Seal */}
-                    <div className="cert-footer-modern">
-                        <div className="footer-seg date-seg">
-                            <span className="seg-label">DATE</span>
-                            <span className="seg-value">{completionDate}</span>
-                        </div>
-
-                        <div className="footer-seg seal-seg">
-                            <div className="modern-seal">
-                                <i className="bi bi-patch-check-fill"></i>
-                                <span>VERIFIED</span>
+                    {/* Footer Section */}
+                    <div className="cert-footer">
+                        {/* Left: Date */}
+                        <div className="footer-col left">
+                            <div className="cert-date">
+                                <div className="meta-value">{completionDate}</div>
+                                <div className="meta-label">DATE</div>
                             </div>
                         </div>
 
-                        <div className="footer-seg sig-seg">
-                            <div className="sig-image">Station-S Team</div>
-                            <div className="seg-line"></div>
-                            <span className="seg-label">AUTHORIZED SIGNATURE</span>
+                        {/* Center: Badge */}
+                        <div className="footer-col center">
+                            <div className="cert-badge-container">
+                                <div className="verified-badge">
+                                    <i className="bi bi-patch-check-fill badge-icon"></i>
+                                </div>
+                                <div className="cert-id">ID: {certificateId}</div>
+                            </div>
+                        </div>
+
+                        {/* Right: Signature */}
+                        <div className="footer-col right">
+                            <div className="cert-signature">
+                                <div className="meta-value">Yash Agarwal</div>
+                                <div className="meta-label">AUTHORIZED SIGNATURE</div>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Meta ID */}
-                    <div className="cert-meta-id">ID: {certificateId}</div>
                 </div>
             </div>
         </div>

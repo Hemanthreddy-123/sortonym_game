@@ -6,16 +6,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 :root {
-    --dash-bg: #f3f4f6;
-    --dash-card-bg: #ffffff;
+    --dash-bg: #F6F6F6;
+    /* Cloud Gray */
+    --dash-card-bg: #FFFFFF;
+    /* White */
     --dash-green: #00A63F;
-    /* Primary Brand Green */
-    --dash-green-dark: #059669;
+    /* Primary Green */
+    --dash-green-dark: #0E5F3A;
+    /* Deep Forest Green */
     --dash-red: #ef4444;
-    --dash-text-main: #1f2937;
-    --dash-text-sub: #6b7280;
-    --dash-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --dash-radius: 16px;
+    --dash-text-main: #000000;
+    /* Black */
+    --dash-text-sub: #53565A;
+    /* Cool Gray */
+    --dash-accent-teal: #009688;
+    /* Teal Accent */
+    --dash-mint: #E6F4EE;
+    /* Soft Mint */
+    --dash-slate: #9CA3AF;
+    /* Slate Gray */
+
+    --dash-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+    /* Softer, more modern shadow */
+    --dash-radius: 20px;
+    /* Slightly more rounded */
 }
 
 body {
@@ -97,32 +111,45 @@ body {
     line-height: 1.2;
 }
 
-.header-right {
-    display: flex;
-    gap: 12px;
-}
-
-.info-badge {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    padding: 6px 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 60px;
-}
-
-.info-badge .label {
-    font-size: 0.6rem;
-    font-weight: 700;
-    opacity: 0.8;
-    text-transform: uppercase;
-}
-
 .info-badge .value {
     font-size: 1.1rem;
     font-weight: 700;
+}
+
+/* Time and Rank Badges (Below Circle) */
+.time-rank-badges {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: center;
+    width: 100%;
+}
+
+.time-rank-badges .info-badge {
+    background: var(--dash-green);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+    flex: 1;
+    max-width: 120px;
+}
+
+.time-rank-badges .info-badge .label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-rank-badges .info-badge .value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
 }
 
 /* Body Grid (Circle + Stats) */
@@ -225,16 +252,17 @@ body {
 }
 
 .stat-card {
-    background: #fcfcfc;
-    /* Very light grey/white */
-    border: 1px solid #f3f4f6;
+    background: white;
+    border: 1px solid var(--dash-green);
+    /* Green Outline */
     border-radius: 16px;
     padding: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 4px 12px rgba(0, 166, 63, 0.08);
+    /* Green Glow */
 }
 
 .stat-card:hover {
@@ -413,7 +441,7 @@ body {
 }
 
 .red-header {
-    background: #b91c1c;
+    background: #ef4444;
 }
 
 .column-header h3 {
@@ -533,12 +561,55 @@ body {
         padding: 24px;
     }
 
+    /* Mobile Header Fixes */
+    /* Mobile Header Fixes */
+    .result-header-green {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        /* Reduced gap */
+        padding: 20px;
+        /* Consistent padding */
+    }
+
+    .header-left {
+        width: 100%;
+        align-items: flex-start;
+        /* Align icon and text to top */
+        gap: 12px;
+    }
+
+    .trophy-icon-box {
+        flex-shrink: 0;
+        /* Prevent icon squishing */
+        width: 40px;
+        /* Slightly smaller on mobile */
+        height: 40px;
+        font-size: 1.25rem;
+    }
+
+    .header-text {
+        flex: 1;
+        /* Allow text to fill space */
+        min-width: 0;
+        /* Enable text truncation/wrapping in flex container */
+    }
+
+    .header-text h1 {
+        font-size: 1rem;
+        /* Adjusted size */
+        line-height: 1.2;
+        margin-top: 4px;
+    }
+
+    .header-text .subtitle {
+        font-size: 0.7rem;
+    }
+
     .score-circle-panel {
         border-right: none;
         border-bottom: 1px solid #f3f4f6;
-        padding-right: 0;
         padding-bottom: 24px;
-        margin-bottom: 24px;
     }
 
     .stats-dashboard-grid {
@@ -546,7 +617,13 @@ body {
     }
 
     .stat-card {
-        padding: 12px;
+        padding: 14px;
+        border: 1px solid var(--dash-green);
+        /* Match button outline */
+        background: white;
+        box-shadow: 0 4px 12px rgba(0, 166, 63, 0.08);
+        /* Subtle green glow */
+        border-radius: 12px;
     }
 
     .stat-label {
@@ -559,10 +636,21 @@ body {
 
     .action-buttons-row {
         flex-direction: column;
+        gap: 12px;
     }
 
     .btn-action {
         width: 100%;
+        padding: 16px;
+        /* Larger touch target */
+    }
+
+    /* Mobile specific: Apply success outline style to secondary buttons for better visibility */
+    .btn-action.white-outline {
+        border: 1px solid var(--dash-green);
+        color: var(--dash-green);
+        background: white;
+        font-weight: 700;
     }
 
     .words-review-container {

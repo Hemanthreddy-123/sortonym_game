@@ -18,7 +18,9 @@ const ResultPage = () => {
         results = null,
         gameData = null,
         synonymBox = [],
-        antonymBox = []
+        antonymBox = [],
+        roundsPlayed = 0,
+        isBestPerformance = false
     } = location.state || {};
 
     // Fallback for standalone reload
@@ -35,6 +37,8 @@ const ResultPage = () => {
                 gameData = { words: new Array(parsed.totalWords).fill(null) };
                 synonymBox = parsed.synonymBox || [];
                 antonymBox = parsed.antonymBox || [];
+                roundsPlayed = parsed.roundsPlayed || 0;
+                isBestPerformance = parsed.isBestPerformance || false;
             } catch (e) {
                 console.error("Failed to parse stored results", e);
             }
@@ -113,17 +117,23 @@ const ResultPage = () => {
                         </div>
                         <div className="header-text">
                             <span className="subtitle">CHALLENGE COMPLETE</span>
-                            <h1>Outstanding Performance!</h1>
-                        </div>
-                    </div>
-                    <div className="header-right">
-                        <div className="info-badge">
-                            <span className="label text-white">TIME</span>
-                            <span className="value text-white">2:34</span>
-                        </div>
-                        <div className="info-badge">
-                            <span className="label text-white">RANK</span>
-                            <span className="value text-white">#12</span>
+                            <h1>
+                                Outstanding Performance!
+                                {isBestPerformance && roundsPlayed > 0 && (
+                                    <span style={{
+                                        marginLeft: '12px',
+                                        fontSize: '0.5em',
+                                        background: '#fbbf24',
+                                        color: '#000',
+                                        padding: '4px 12px',
+                                        borderRadius: '20px',
+                                        fontWeight: '800',
+                                        verticalAlign: 'middle'
+                                    }}>
+                                        🏆 Best of {roundsPlayed} Rounds
+                                    </span>
+                                )}
+                            </h1>
                         </div>
                     </div>
                 </div>
@@ -155,6 +165,18 @@ const ResultPage = () => {
                             <i className="bi bi-star-fill active"></i>
                             <i className="bi bi-star-fill active"></i>
                             <i className="bi bi-star-half active"></i>
+                        </div>
+
+                        {/* TIME and RANK badges below circle */}
+                        <div className="time-rank-badges">
+                            <div className="info-badge">
+                                <span className="label">TIME</span>
+                                <span className="value">2:34</span>
+                            </div>
+                            <div className="info-badge">
+                                <span className="label">RANK</span>
+                                <span className="value">#12</span>
+                            </div>
                         </div>
                     </div>
 

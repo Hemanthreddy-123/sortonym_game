@@ -199,7 +199,7 @@ function LandingPage() {
                               autoFocus
                             />
                             <div className="edit-actions">
-                              <button className="btn btn-primary btn-sm" onClick={handleEditToggle}>Save</button>
+                              <button className="btn btn-success btn-sm" onClick={handleEditToggle}>Save</button>
                               <button className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>Cancel</button>
                             </div>
                           </div>
@@ -390,10 +390,10 @@ function LandingPage() {
 
             <div className="landing-actions">
               <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
-                <i className="bi bi-play-fill me-2"></i> START CHALLENGE
+                <i className="bi bi-play-fill me-2"></i> Play Game
               </button>
               <button className="btn btn-outline-green btn-lg" onClick={() => navigate('/leaderboard')}>
-                <i className="bi bi-trophy me-2"></i> LEADERBOARD
+                <i className="bi bi-trophy me-2"></i> Leaderboard
               </button>
             </div>
 

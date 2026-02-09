@@ -51,6 +51,11 @@ function GamePage() {
     // Final Results Data
     const [results, setResults] = useState(null);
 
+    // Continuous Gameplay States
+    const [roundHistory, setRoundHistory] = useState([]);
+    const [bestPerformance, setBestPerformance] = useState(null);
+    const [roundCount, setRoundCount] = useState(0);
+
     // Effect: Initialize based on mode
     useEffect(() => {
         if (!gameData && token && gameState === 'idle') {
@@ -261,7 +266,7 @@ function GamePage() {
 
         const submissionData = {
             token,
-            roundId: gameData?.score_id || gameData?.round_id, // Match backend keys
+            roundId: gameData?.score_id || gameData?.round_id,
             synonyms: synonymBox.map(w => w.word),
             antonyms: antonymBox.map(w => w.word),
             timeTaken,
@@ -272,42 +277,40 @@ function GamePage() {
             const res = await submitGame(submissionData);
 
             if (isDaily) {
-                // Determine if we show modal or redirect. 
-                // The requirement says "The results will be revealed in 12:34:56" which implies we block access to immediate results?
-                // But the user just asked for validation.
-                // Let's stick to the existing daily flow (Modal -> Home) or redirect to Daily Results page.
-
-                // For now, let's redirect to the Daily Leaderboard Results page, which handles the "Locked" state if needed.
-                // But wait, the previous mock code showed a modal.
-                // Let's use the modal for feedback, then user goes to home.
-                // Or better, redirect to results page directly.
-
-                // Let's stick to the modal for now to confirm submission success, then they can navigate.
                 setShowSubmissionModal(true);
                 setGameState('completed');
             } else {
-                // Navigate directly to React Result Page (where Certificate/Share works)
-                navigate('/result', {
-                    state: {
-                        results: res,
-                        gameData,
-                        synonymBox,
-                        antonymBox
-                    }
-                });
+                // Continuous Gameplay: Track this round's performance
+                const currentRound = {
+                    score: res.score || 0,
+                    total_correct: res.total_correct || 0,
+                    time_bonus: res.time_bonus || 0,
+                    accuracy: res.accuracy || 0,
+                    timeTaken,
+                    synonyms: synonymBox,
+                    antonyms: antonymBox,
+                    gameData,
+                    timestamp: Date.now()
+                };
+
+                // Add to round history
+                const updatedHistory = [...roundHistory, currentRound];
+                setRoundHistory(updatedHistory);
+                setRoundCount(prev => prev + 1);
+
+                // Update best performance if this round is better
+                if (!bestPerformance || currentRound.score > bestPerformance.score) {
+                    setBestPerformance(currentRound);
+                }
+
+                // Start next round automatically
+                initializeGame(level);
             }
         } catch (err) {
             console.error("Submission Failed:", err);
-            // Navigate to result page even if API fails
             if (!isDaily) {
-                navigate('/result', {
-                    state: {
-                        results: { score: 0, total_correct: 0, time_bonus: 0 },
-                        gameData,
-                        synonymBox,
-                        antonymBox
-                    }
-                });
+                // Even on error, continue gameplay
+                initializeGame(level);
             } else {
                 setGameState('error');
                 alert("Submission failed. Please try again.");
@@ -321,10 +324,36 @@ function GamePage() {
     };
 
     const handlePlayAgain = () => {
+        // Reset continuous gameplay states
+        setRoundHistory([]);
+        setBestPerformance(null);
+        setRoundCount(0);
         initializeGame();
     };
 
-    const handleExit = () => navigate('/home');
+    const handleExit = () => {
+        // If user has played rounds, show best performance on results page
+        if (bestPerformance) {
+            navigate('/result', {
+                state: {
+                    results: {
+                        score: bestPerformance.score,
+                        total_correct: bestPerformance.total_correct,
+                        time_bonus: bestPerformance.time_bonus,
+                        accuracy: bestPerformance.accuracy
+                    },
+                    gameData: bestPerformance.gameData,
+                    synonymBox: bestPerformance.synonyms,
+                    antonymBox: bestPerformance.antonyms,
+                    roundsPlayed: roundCount,
+                    isBestPerformance: true
+                }
+            });
+        } else {
+            // No rounds played, just go home
+            navigate('/home');
+        }
+    };
 
     const handleCertificate = async () => {
         if (certificateRef.current === null) return;
@@ -489,10 +518,30 @@ function GamePage() {
             <header className="game-header-compact">
                 <div className="header-player">
                     <i className="bi bi-person-fill"></i> {member?.name}
+                    {roundCount > 0 && !isDaily && (
+                        <span style={{
+                            marginLeft: '12px',
+                            fontSize: '11px',
+                            background: 'var(--soft-mint)',
+                            color: 'var(--brand-green)',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontWeight: '700'
+                        }}>
+                            Round {roundCount + 1}
+                        </span>
+                    )}
                 </div>
                 <Timer timeLeft={timeLeft} formatTime={formatTime} />
                 <div className="header-level" data-level={level}>
-                    Lvl: {level}
+                    {bestPerformance && !isDaily ? (
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '9px', opacity: 0.7 }}>Best</div>
+                            <div style={{ fontSize: '13px', fontWeight: '800' }}>{bestPerformance.score.toFixed(1)}</div>
+                        </div>
+                    ) : (
+                        <>Lvl: {level}</>
+                    )}
                 </div>
             </header>
 
@@ -634,9 +683,9 @@ function GamePage() {
                 </div>
             </main>
 
-            <footer className="game-footer-controls">
+            <footer className="game-footer-controls ">
                 <GameButton
-                    label="Submit"
+                    label="Submit "
                     onClick={handleSubmit}
                     disabled={timeExpired || synonymBox.length + antonymBox.length === 0}
                     variant="submit"
