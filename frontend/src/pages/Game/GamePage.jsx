@@ -88,46 +88,29 @@ function GamePage() {
     };
 
     const initializeDailyGame = async () => {
-        const today = new Date().toISOString().split('T')[0];
-        const lastPlayed = localStorage.getItem('daily_challenge_played_date');
-        const isAdmin = member?.email === 'admin.test@sortonym.com' || user?.email === 'admin.test@sortonym.com';
-
-        if (!isAdmin && lastPlayed === today) {
-            alert("You have already played today's Daily Challenge. Come back tomorrow!");
-            navigate('/home');
-            return;
-        }
-
         setGameState('loading');
         setSynonymBox([]);
         setAntonymBox([]);
         setTimeExpired(false);
         setLevel('DAILY');
 
-        // Mock Daily Data (Simulating backend response)
-        // In real implementation, this comes from /api/daily/start
-        setTimeout(() => {
-            const dailyData = {
-                anchor_word: "Ephemeral",
-                words: [
-                    { id: 1, word: "Transient", type: "synonym" },
-                    { id: 2, word: "Fleeting", type: "synonym" },
-                    { id: 3, word: "Permanent", type: "antonym" },
-                    { id: 4, word: "Eternal", type: "antonym" },
-                    { id: 5, word: "Lasting", type: "antonym" },
-                    { id: 6, word: "Short-lived", type: "synonym" },
-                ],
-                time_limit: 60,
-                level: "HARD",
-                round_id: "daily-" + today
-            };
-
-            setGameData(dailyData);
-            setAvailableWords(dailyData.words);
-            setTimeLeft(dailyData.time_limit);
+        try {
+            const data = await startGame({ token, level: 'DAILY' });
+            setGameData(data);
+            setAvailableWords(data.words || []);
+            setTimeLeft(data.time_limit || 45); // Hard default
             startTimeRef.current = Date.now();
             setGameState('playing');
-        }, 800);
+        } catch (err) {
+            console.error("Daily Game Start Failed:", err);
+            // Check if error is 403 (Already played)
+            if (err.status === 403 || err.message?.includes('already played')) {
+                alert("You have already played the Daily Challenge today. Check back tomorrow!");
+                navigate('/daily-challenge-results'); // Redirect to results instead of home
+            } else {
+                setGameState('error');
+            }
+        }
     };
 
     const initializeGame = async (selectedLevel) => {
@@ -285,51 +268,50 @@ function GamePage() {
             level
         };
 
-        if (isDaily) {
-            // MOCK SUBMISSION FOR DAILY
-            setTimeout(() => {
-                const today = new Date().toISOString().split('T')[0];
-                localStorage.setItem('daily_challenge_played_date', today);
-
-                const isAdmin = member?.email === 'admin.test@sortonym.com' || user?.email === 'admin.test@sortonym.com';
-
-                // IMPORTANT: Clear loading state before showing modal or navigating
-                setGameState('completed');
-
-                if (isAdmin) {
-                    navigate('/daily-challenge-results');
-                } else {
-                    setShowSubmissionModal(true);
-                }
-            }, 1000);
-            return;
-        }
-
         try {
             const res = await submitGame(submissionData);
 
+            if (isDaily) {
+                // Determine if we show modal or redirect. 
+                // The requirement says "The results will be revealed in 12:34:56" which implies we block access to immediate results?
+                // But the user just asked for validation.
+                // Let's stick to the existing daily flow (Modal -> Home) or redirect to Daily Results page.
 
+                // For now, let's redirect to the Daily Leaderboard Results page, which handles the "Locked" state if needed.
+                // But wait, the previous mock code showed a modal.
+                // Let's use the modal for feedback, then user goes to home.
+                // Or better, redirect to results page directly.
 
-            // Navigate directly to React Result Page (where Certificate/Share works)
-            navigate('/result', {
-                state: {
-                    results: res,
-                    gameData,
-                    synonymBox,
-                    antonymBox
-                }
-            });
+                // Let's stick to the modal for now to confirm submission success, then they can navigate.
+                setShowSubmissionModal(true);
+                setGameState('completed');
+            } else {
+                // Navigate directly to React Result Page (where Certificate/Share works)
+                navigate('/result', {
+                    state: {
+                        results: res,
+                        gameData,
+                        synonymBox,
+                        antonymBox
+                    }
+                });
+            }
         } catch (err) {
             console.error("Submission Failed:", err);
             // Navigate to result page even if API fails
-            navigate('/result', {
-                state: {
-                    results: { score: 0, total_correct: 0, time_bonus: 0 },
-                    gameData,
-                    synonymBox,
-                    antonymBox
-                }
-            });
+            if (!isDaily) {
+                navigate('/result', {
+                    state: {
+                        results: { score: 0, total_correct: 0, time_bonus: 0 },
+                        gameData,
+                        synonymBox,
+                        antonymBox
+                    }
+                });
+            } else {
+                setGameState('error');
+                alert("Submission failed. Please try again.");
+            }
         }
     };
 

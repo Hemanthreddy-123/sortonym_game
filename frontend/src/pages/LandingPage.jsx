@@ -400,8 +400,8 @@ function LandingPage() {
             {/* DAILY CHALLENGE DASHBOARD CARD */}
             <div className="daily-card">
               <div className="daily-card-text">
-                <h3>Today's Daily Challenge</h3>
-                <p>Compete with everyone on the same words!</p>
+                <h3 className="text-white">Today's Daily Challenge</h3>
+                <p className="text-white">Compete with everyone on the same words!</p>
               </div>
               {(() => {
                 const today = new Date().toISOString().split('T')[0];
@@ -498,6 +498,9 @@ function LandingPage() {
         {/* --- Benefits & CTA --- */}
         <div className="landing-container">
           <section className="benefits-section">
+            <div className="section-header">
+              <h2>Why Play Sortonym?</h2>
+            </div>
             <div className="benefits-grid">
               <div className="benefit-card">
                 <div className="benefit-icon-box"><i className="bi bi-lightning-charge"></i></div>

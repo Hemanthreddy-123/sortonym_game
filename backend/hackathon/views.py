@@ -5,6 +5,7 @@ import random
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from django.utils import timezone
+from django.db.models import Q
 
 from .auth import (
     ExternalAuthError,
@@ -337,10 +338,26 @@ class ApiGameStartView(View):
         
         payload = _json_body(request)
         level = (payload.get('level') or 'easy').lower()
-        if level not in LEVEL_CONFIG:
-            level = 'easy'
         
-        config = LEVEL_CONFIG[level]
+        # DAILY CHALLENGE VALIDATION
+        if level == 'daily':
+            email = (session_payload.get('email') or '').strip()
+            phone = (session_payload.get('phone_number') or '').strip()
+            
+            # Check if played today
+            today = timezone.now().date()
+            query = Q(created_at__date=today) & (Q(player_email=email) | (Q(player_phone=phone) if phone else Q(pk__in=[])))
+            
+            if GameResult.objects.filter(query).exists():
+                return JsonResponse({'error': 'You have already played the Daily Challenge today.'}, status=403)
+                
+            # Use 'hard' config for daily challenge
+            config = LEVEL_CONFIG['hard']
+        elif level not in LEVEL_CONFIG:
+            level = 'easy'
+            config = LEVEL_CONFIG[level]
+        else:
+            config = LEVEL_CONFIG[level]
 
         count = SortonymWord.objects.count()
         if count == 0:
@@ -388,6 +405,8 @@ class ApiGameSubmitView(View):
             return JsonResponse({'error': 'Unauthorized'}, status=401)
         
         email = (session_payload.get('email') or '').strip()
+        player_name = session_payload.get('display_name') or email
+        phone = (session_payload.get('phone_number') or '').strip()
         payload = _json_body(request)
         
         round_id = payload.get('roundId')
@@ -455,6 +474,8 @@ class ApiGameSubmitView(View):
         # Save Result
         GameResult.objects.create(
             player_email=email,
+            player_name=player_name,
+            player_phone=phone,
             round_id=round_id,
             score=total_score,
             total_correct=correct_count,
@@ -493,6 +514,7 @@ class ApiLeaderboardView(View):
             seen_emails.add(res.player_email)
             data.append({
                 'player_email': res.player_email,
+                'player_name': res.player_name or res.player_email.split('@')[0],
                 'score': res.score,
                 'total_correct': res.total_correct,
                 'time_taken': res.time_taken,

@@ -10,6 +10,8 @@ class SortonymWord(models.Model):
 
 class GameResult(models.Model):
     player_email = models.EmailField()
+    player_phone = models.CharField(max_length=20, null=True, blank=True)
+    player_name = models.CharField(max_length=255, null=True, blank=True)
     round_id = models.IntegerField(null=True)
     score = models.FloatField(default=0.0)
     total_correct = models.IntegerField(default=0)

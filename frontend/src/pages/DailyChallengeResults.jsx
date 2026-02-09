@@ -59,14 +59,46 @@ function DailyChallengeResults() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // MOCK LEADERBOARD DATA
-    const leaderboardData = [
-        { rank: 1, name: "WordMaster99", score: 980, time: "45s" },
-        { rank: 2, name: "LexiconKing", score: 950, time: "48s" },
-        { rank: 3, name: "SyntaxSage", score: 920, time: "52s" },
-        { rank: 4, name: "You (Hemanth)", score: 890, time: "58s", isUser: true },
-        { rank: 5, name: "VocabViper", score: 850, time: "60s" }
-    ];
+    const [leaderboardData, setLeaderboardData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLeaderboard = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/leaderboard?period=today');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+
+                // Process data to match component structure
+                const formattedData = data.leaderboard.map((item, index) => ({
+                    rank: index + 1,
+                    name: item.player_name || item.player_email.split('@')[0],
+                    score: Math.round(item.score),
+                    time: `${Math.round(item.time_taken)}s`,
+                    isUser: user?.email === item.player_email
+                }));
+
+                setLeaderboardData(formattedData);
+            } catch (error) {
+                console.error("Failed to fetch leaderboard", error);
+                // Fallback to mock if fetch fails? Or just show empty.
+                // Keeping mock data as fallback for now if empty
+                if (leaderboardData.length === 0) {
+                    setLeaderboardData([
+                        { rank: 1, name: "WordMaster99", score: 980, time: "45s" },
+                        { rank: 2, name: "LexiconKing", score: 950, time: "48s" },
+                        { rank: 3, name: "SyntaxSage", score: 920, time: "52s" },
+                        { rank: 4, name: "You (Hemanth)", score: 890, time: "58s", isUser: true },
+                        { rank: 5, name: "VocabViper", score: 850, time: "60s" }
+                    ]);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLeaderboard();
+    }, [user, member]);
 
     // Helper for Rank Icon
     const getRankDisplay = (rank) => {
@@ -275,15 +307,23 @@ function DailyChallengeResults() {
                                     <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Your Performance Overview</h4>
                                     <div style={{ display: 'flex', justifyContent: 'center', gap: isMobile ? '20px' : '60px' }}>
                                         <div className="stat-box">
-                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>890</div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>
+                                                {leaderboardData.find(p => p.isUser)?.score || '-'}
+                                            </div>
                                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '500' }}>Score</div>
                                         </div>
                                         <div className="stat-box">
-                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>#4</div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>
+                                                {leaderboardData.find(p => p.isUser) ? `#${leaderboardData.find(p => p.isUser).rank}` : '-'}
+                                            </div>
                                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '500' }}>Rank</div>
                                         </div>
                                         <div className="stat-box">
-                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>Top 10%</div>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#1e293b' }}>
+                                                {leaderboardData.find(p => p.isUser)
+                                                    ? `Top ${Math.ceil((leaderboardData.find(p => p.isUser).rank / leaderboardData.length) * 100)}%`
+                                                    : '-'}
+                                            </div>
                                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '500' }}>Percentile</div>
                                         </div>
                                     </div>
