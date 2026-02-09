@@ -1,18 +1,26 @@
-# data
-backend/hackathon_users.csv
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
 
-# dependencies
-frontend/node_modules
-
-# python
-__pycache__/
-*.pyc
-
-# sqlite
-*.sqlite3
-db.sqlite3
-
-# virtualenv
-backend/venv/
-.venv/
+# Python
 venv/
+backend/venv/
+*.pyc
+__pycache__/
+backend/backend/__pycache__/
+backend/hackathon/__pycache__/
+
+# Database
+backend/db.sqlite3
+
+# Env
+.env
+backend/.env
+frontend/.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

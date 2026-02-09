@@ -211,7 +211,7 @@ function DailyChallengeResults() {
 
                             {/* Body - Scrollable Area */}
                             <div className="results-body" style={{
-                                padding: isMobile ? '0' : '0',
+                                padding: isMobile ? '0 0 100px 0' : '0', // Add padding-bottom on mobile for fixed footer
                                 overflowY: 'auto',
                                 flex: 1
                             }}>
@@ -302,7 +302,19 @@ function DailyChallengeResults() {
                             </div>
 
                             {/* Performance Summary / Footer */}
-                            <div className="results-footer" style={{ padding: '24px', textAlign: 'center', background: '#f8fafc', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
+                            <div className="results-footer" style={{
+                                padding: '24px',
+                                textAlign: 'center',
+                                background: '#f8fafc',
+                                borderTop: '1px solid #e2e8f0',
+                                flexShrink: 0,
+                                position: isMobile ? 'fixed' : 'relative',
+                                bottom: isMobile ? 0 : 'auto',
+                                left: 0,
+                                width: '100%',
+                                zIndex: 100,
+                                boxShadow: isMobile ? '0 -4px 12px rgba(0,0,0,0.05)' : 'none'
+                            }}>
                                 <div className="performance-summary" style={{ marginBottom: '20px' }}>
                                     <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Your Performance Overview</h4>
                                     <div style={{ display: 'flex', justifyContent: 'center', gap: isMobile ? '20px' : '60px' }}>

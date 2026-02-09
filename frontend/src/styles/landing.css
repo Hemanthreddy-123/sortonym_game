@@ -739,53 +739,53 @@ body.dark-mode .user-info-icon {
     .landing-container {
         padding: 0 16px;
     }
-    
+
     .landing-title {
         font-size: 2.5rem;
         line-height: 1.1;
         margin-bottom: 20px;
     }
-    
+
     .landing-subtitle {
         font-size: 1.1rem;
         margin-bottom: 32px;
     }
-    
+
     .hero-badge {
         font-size: 0.8rem;
         padding: 6px 16px;
         margin-bottom: 24px;
     }
-    
+
     .landing-actions {
         flex-direction: column;
         align-items: center;
         gap: 12px;
         margin-bottom: 32px;
     }
-    
+
     .btn {
         width: 100%;
         max-width: 280px;
         padding: 14px 24px;
         font-size: 1rem;
     }
-    
+
     .hero-stats {
         grid-template-columns: 1fr;
         gap: 16px;
         margin-top: 24px;
     }
-    
+
     .stat-card {
         padding: 24px 20px;
         text-align: center;
     }
-    
+
     .stat-value {
         font-size: 2rem;
     }
-    
+
     .stat-label {
         font-size: 0.9rem;
     }
@@ -796,96 +796,96 @@ body.dark-mode .user-info-icon {
         font-size: 2rem;
         letter-spacing: -1px;
     }
-    
+
     .landing-subtitle {
         font-size: 1rem;
         max-width: 100%;
     }
-    
+
     .hero-section {
         margin-bottom: 60px;
     }
-    
+
     .protocol-bg-outer {
         padding: 40px 0;
         margin: 30px 0;
     }
-    
+
     .section-header h2 {
         font-size: 2rem;
         margin-bottom: 8px;
     }
-    
+
     .section-subtitle {
         font-size: 1rem;
     }
-    
+
     .protocol-card {
         padding: 24px;
         margin-bottom: 16px;
     }
-    
+
     .card-top {
         margin-bottom: 12px;
     }
-    
+
     .card-icon {
         width: 40px;
         height: 40px;
         font-size: 1.1rem;
     }
-    
+
     .bg-number {
         font-size: 2.5rem;
     }
-    
+
     .protocol-card h3 {
         font-size: 1.1rem;
         margin-bottom: 8px;
     }
-    
+
     .protocol-card p {
         font-size: 0.9rem;
     }
-    
+
     .benefits-section {
         padding: 30px 0;
     }
-    
+
     .benefit-card {
         padding: 24px;
         margin-bottom: 16px;
     }
-    
+
     .benefit-icon-box {
         width: 40px;
         height: 40px;
         font-size: 1.1rem;
         margin-bottom: 12px;
     }
-    
+
     .benefit-card h3 {
         font-size: 1.1rem;
         margin-bottom: 8px;
     }
-    
+
     .benefit-card p {
         font-size: 0.9rem;
     }
-    
+
     .cta-section {
         padding: 30px 0 60px;
     }
-    
+
     .cta-card {
         padding: 40px 24px;
     }
-    
+
     .cta-card h2 {
         font-size: 1.8rem;
         margin-bottom: 8px;
     }
-    
+
     .cta-card p {
         font-size: 1rem;
         margin-bottom: 24px;
@@ -894,36 +894,45 @@ body.dark-mode .user-info-icon {
 
 @media (max-width: 480px) {
     .landing-title {
-        font-size: 1.8rem;
+        font-size: 2.2rem;
+        line-height: 1.1;
+        letter-spacing: -1px;
     }
-    
+
     .landing-container {
-        padding: 0 12px;
+        padding: 0 16px;
     }
-    
+
     .btn {
-        padding: 12px 20px;
-        font-size: 0.9rem;
+        padding: 14px 20px;
+        font-size: 1rem;
+        width: 100%;
+        justify-content: center;
     }
-    
+
     .stat-card {
-        padding: 20px 16px;
+        padding: 24px 20px;
     }
-    
+
     .stat-value {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
-    
+
     .protocol-card,
     .benefit-card {
-        padding: 20px;
+        padding: 24px;
     }
-    
+
     .cta-card {
         padding: 32px 20px;
     }
-    
+
     .cta-card h2 {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
+    }
+
+    .landing-subtitle {
+        font-size: 1rem;
+        line-height: 1.5;
     }
 }

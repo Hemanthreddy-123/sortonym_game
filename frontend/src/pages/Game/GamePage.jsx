@@ -545,7 +545,7 @@ function GamePage() {
                     </div>
 
                     {/* CENTER COLUMN - Anchor Word */}
-                    <div style={{
+                    <div className="anchor-zone-container" style={{
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
