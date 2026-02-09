@@ -601,22 +601,6 @@ function GamePage() {
                         justifyContent: 'center',
                         padding: '10px'
                     }}>
-                        <div style={{
-                            width: '80px',
-                            height: '80px',
-                            background: 'var(--brand-green)',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '16px',
-                            boxShadow: '0 6px 16px rgba(0, 166, 63, 0.2)'
-                        }}>
-                            <i className="bi bi-lightbulb-fill" style={{
-                                fontSize: '32px',
-                                color: 'white'
-                            }}></i>
-                        </div>
                         <span style={{
                             fontSize: '11px',
                             color: 'var(--slate-gray)',
