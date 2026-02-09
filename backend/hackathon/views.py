@@ -1,11 +1,14 @@
 import json
 import re
 import random
+import requests
+import os
 
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from django.utils import timezone
 from django.db.models import Q
+from django.conf import settings
 
 from .auth import (
     ExternalAuthError,
@@ -525,3 +528,63 @@ class ApiLeaderboardView(View):
                 break
             
         return JsonResponse({'leaderboard': data})
+
+
+class ApiGoogleLoginView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        payload = _json_body(request)
+        token = payload.get('token')
+
+        if not token:
+            return JsonResponse({'error': 'Google token is required.'}, status=400)
+
+        # Verify token with Google
+        try:
+            # We call Google's tokeninfo endpoint to verify the ID token
+            # This handles signature verification and expiration checks
+            response = requests.get(
+                f'https://oauth2.googleapis.com/tokeninfo?id_token={token}',
+                timeout=10
+            )
+            
+            if response.status_code != 200:
+                return JsonResponse({'error': 'Invalid Google token.'}, status=401)
+                
+            google_data = response.json()
+            
+            # Strict Audience Check (Security)
+            client_id = os.getenv('GOOGLE_CLIENT_ID')
+            if client_id and google_data.get('aud') != client_id:
+                 return JsonResponse({'error': 'Invalid token audience (Client ID mismatch).'}, status=401)
+
+            email = google_data.get('email')
+            display_name = google_data.get('name') or google_data.get('given_name') or email.split('@')[0]
+
+            if not email:
+                return JsonResponse({'error': 'Email not provided by Google.'}, status=400)
+
+            # In this system, we treat new and existing users seamlessly.
+            # We create a session with the verified identity.
+            session_payload = {
+                'email': email,
+                'display_name': display_name,
+                'status': 'success',
+                'google_auth': True
+            }
+            
+            raw_token, expires_at = create_signed_session(payload=session_payload)
+
+            return JsonResponse(
+                {
+                    'token': raw_token,
+                    'expires_at': expires_at.isoformat(),
+                    'user': {
+                        'id': None,
+                        'username': email,
+                    },
+                }
+            )
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': f'Failed to verify token with Google: {str(e)}'}, status=502)
+        except Exception as e:
+            return JsonResponse({'error': 'An internal error occurred during Google Login.'}, status=500)

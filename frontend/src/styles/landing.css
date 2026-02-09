@@ -759,16 +759,25 @@ body.dark-mode .user-info-icon {
 
     .landing-actions {
         flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 32px;
+        align-items: stretch;
+        /* Stretch buttons to fill width */
+        gap: 16px;
+        /* Increased gap for better touch targets */
+        margin-bottom: 48px;
+        /* Extra bottom margin */
+        padding-bottom: 20px;
+        /* Safety padding */
     }
 
     .btn {
         width: 100%;
-        max-width: 280px;
+        max-width: 100%;
+        /* Ensure full width on mobile */
         padding: 14px 24px;
         font-size: 1rem;
+        /* Ensure buttons don't overflow or get hidden */
+        display: flex;
+        box-sizing: border-box;
     }
 
     .hero-stats {
@@ -934,5 +943,87 @@ body.dark-mode .user-info-icon {
     .landing-subtitle {
         font-size: 1rem;
         line-height: 1.5;
+    }
+}
+
+/* --- Floating Scroll Navigation --- */
+.scroll-nav-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 1000;
+    pointer-events: none;
+    /* Allow clicks through container areas */
+    /* Safe area for mobile browsers */
+    bottom: calc(30px + env(safe-area-inset-bottom));
+}
+
+.scroll-nav-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #DC2626;
+    /* Red arrow */
+    font-size: 1.25rem;
+    pointer-events: auto;
+    /* Re-enable clicks on buttons */
+    touch-action: manipulation;
+    /* Optimizes touch events immediately */
+    -webkit-tap-highlight-color: transparent;
+    /* Remove blue flash on tap */
+}
+
+.scroll-nav-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.scroll-nav-btn:active {
+    transform: translateY(0);
+    /* Remove jumpy active state on touch */
+    background: #f1f5f9;
+}
+
+/* Dark Mode Support */
+body.dark-mode .scroll-nav-btn {
+    background: #1e293b;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #ef4444;
+    /* Slightly brighter red for dark mode */
+}
+
+body.dark-mode .scroll-nav-btn:active {
+    background: #334155;
+}
+
+/* Mobile Adjustment */
+@media (max-width: 768px) {
+    .scroll-nav-container {
+        /* Ensure buttons are not blocked by browser UI bars */
+        bottom: 24px;
+        bottom: calc(24px + env(safe-area-inset-bottom));
+        right: 20px;
+        right: calc(20px + env(safe-area-inset-right));
+        gap: 12px;
+    }
+
+    .scroll-nav-btn {
+        width: 48px;
+        /* Kept at 48px for better touch response (min 44px rule) */
+        height: 48px;
+        font-size: 1.2rem;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        /* Slightly stronger shadow for visibility */
     }
 }

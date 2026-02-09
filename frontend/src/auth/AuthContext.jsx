@@ -66,6 +66,16 @@ export function AuthProvider({ children }) {
     [applySession, refresh],
   )
 
+  const signInWithGoogle = useCallback(
+    async ({ token: googleToken }) => {
+      const data = await import('../api/authApi.js').then((m) => m.apiGoogleLogin({ token: googleToken }))
+      applySession(data)
+      await refresh()
+      return data
+    },
+    [applySession, refresh],
+  )
+
   const signOut = useCallback(async () => {
     const currentToken = getAuthToken()
     if (currentToken) {
@@ -82,8 +92,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ token, user, member, status, signIn, signInWithOtp, signOut, refresh, updateMember }),
-    [token, user, member, status, signIn, signInWithOtp, signOut, refresh, updateMember],
+    () => ({ token, user, member, status, signIn, signInWithOtp, signInWithGoogle, signOut, refresh, updateMember }),
+    [token, user, member, status, signIn, signInWithOtp, signInWithGoogle, signOut, refresh, updateMember],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

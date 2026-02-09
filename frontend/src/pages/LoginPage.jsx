@@ -12,7 +12,7 @@ import { useTheme } from '../hooks/useTheme'
 function LoginPage() {
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { signIn, signInWithOtp, status, user } = useAuth()
+  const { signIn, signInWithOtp, signInWithGoogle, status, user } = useAuth()
   const [mode, setMode] = useState('login')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [username, setUsername] = useState('')
@@ -24,6 +24,84 @@ function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [infoMessage, setInfoMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const googleButtonRef = useRef(null);
+
+  // Google Auth Initialization
+  useEffect(() => {
+    const initGsi = () => {
+      /* global google */
+      if (typeof google !== 'undefined') {
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+        if (!clientId || clientId === 'REPLACE_WITH_YOUR_GOOGLE_CLIENT_ID') {
+          console.error("Google Auth: VITE_GOOGLE_CLIENT_ID is not configured in .env file.");
+          setErrorMessage("Google Login is not configured. Please update your .env file with a valid Client ID.");
+          return;
+        }
+
+        try {
+          google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleResponse,
+            ux_mode: 'popup', // Explicitly use popup mode
+            auto_select: false,
+          });
+
+          if (googleButtonRef.current) {
+            google.accounts.id.renderButton(googleButtonRef.current, {
+              theme: 'outline',
+              size: 'large',
+              width: googleButtonRef.current.offsetWidth || 350,
+              text: 'continue_with',
+              shape: 'rectangular',
+              logo_alignment: 'left'
+            });
+          }
+        } catch (err) {
+          console.error("GSI initialization error:", err);
+          setErrorMessage("Failed to initialize Google Login. Check your browser console for details.");
+        }
+      }
+    };
+
+    // Load check logic
+    if (document.readyState === 'complete') {
+      initGsi();
+    } else {
+      window.addEventListener('load', initGsi);
+      return () => window.removeEventListener('load', initGsi);
+    }
+  }, []);
+
+  async function handleGoogleResponse(response) {
+    if (submitting) return;
+    setSubmitting(true);
+    setErrorMessage('');
+    try {
+      if (!response.credential) {
+        throw new Error("No credential returned from Google.");
+      }
+
+      await signInWithGoogle({
+        token: response.credential
+      });
+      navigate('/home');
+    } catch (err) {
+      console.error("Google Auth Error:", err);
+      setErrorMessage(err?.message || 'Google Authentication failed. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function triggerGoogleLogin() {
+    // With renderButton, the button itself handles the click reliably.
+    // If One Tap is desired, we could also call prompt()
+    if (typeof google !== 'undefined') {
+      google.accounts.id.prompt();
+    }
+  }
 
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotPassword, setForgotPassword] = useState('')
@@ -345,36 +423,18 @@ function LoginPage() {
               </div>
 
               <div className="social-login-buttons">
-                <button
-                  type="button"
-                  className="btn-social"
-                  onClick={() => {
-                    setInfoMessage('Google Login initiated...')
-                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
-                  }}
-                >
-                  <i className="bi bi-google"></i>
-                </button>
-                <button
-                  type="button"
-                  className="btn-social"
-                  onClick={() => {
-                    setInfoMessage('Facebook Login initiated...')
-                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
-                  }}
-                >
-                  <i className="bi bi-facebook"></i>
-                </button>
-                <button
-                  type="button"
-                  className="btn-social"
-                  onClick={() => {
-                    setInfoMessage('Apple Login initiated...')
-                    setTimeout(() => setInfoMessage('Social Login is currently in demo mode.'), 1000)
-                  }}
-                >
-                  <i className="bi bi-apple"></i>
-                </button>
+                {/* Official Google Identity Services Button Container */}
+                <div
+                  ref={googleButtonRef}
+                  id="googleSignInButton"
+                  style={{ width: '100%', minHeight: '44px' }}
+                ></div>
+
+                {submitting && (
+                  <div className="submitting-overlay">
+                    <span>Processing...</span>
+                  </div>
+                )}
               </div>
 
               <div className="first-time-box">

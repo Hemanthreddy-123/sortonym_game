@@ -1,4 +1,4 @@
-from .views import ApiForgotPasswordView, ApiLoginView, ApiLogoutView, ApiMeView, ApiOtpRequestView, ApiOtpVerifyView, ApiRegisterView, HealthView, ApiGameStartView, ApiGameSubmitView, ApiLeaderboardView
+from .views import ApiForgotPasswordView, ApiLoginView, ApiLogoutView, ApiMeView, ApiOtpRequestView, ApiOtpVerifyView, ApiRegisterView, HealthView, ApiGameStartView, ApiGameSubmitView, ApiLeaderboardView, ApiGoogleLoginView
 from django.urls import path
 
 urlpatterns = [
@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/forgot-password', ApiForgotPasswordView.as_view(), name='api_forgot_password'),
     path('api/otp/request', ApiOtpRequestView.as_view(), name='api_otp_request'),
     path('api/otp/verify', ApiOtpVerifyView.as_view(), name='api_otp_verify'),
+    path('api/google-login', ApiGoogleLoginView.as_view(), name='api_google_login'),
     path('api/home', ApiMeView.as_view(), name='api_home'),
     path('api/logout', ApiLogoutView.as_view(), name='api_logout'),
     path('api/game/start', ApiGameStartView.as_view(), name='api_game_start'),

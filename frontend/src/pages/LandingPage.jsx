@@ -537,6 +537,24 @@ function LandingPage() {
           </footer>
         </div>
       </main>
+
+      {/* --- Floating Scroll Navigation --- */}
+      <div className="scroll-nav-container">
+        <button
+          className="scroll-nav-btn"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Scroll to top"
+        >
+          <i className="bi bi-arrow-up"></i>
+        </button>
+        <button
+          className="scroll-nav-btn"
+          onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })}
+          aria-label="Scroll to bottom"
+        >
+          <i className="bi bi-arrow-down"></i>
+        </button>
+      </div>
     </div>
   )
 }

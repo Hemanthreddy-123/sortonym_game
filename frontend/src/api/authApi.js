@@ -48,3 +48,9 @@ export function apiRegister({ display_name, email, phone_number, password }) {
     body: { display_name, email, phone_number, password },
   })
 }
+export function apiGoogleLogin({ token }) {
+  return httpJson('/api/google-login', {
+    method: 'POST',
+    body: { token },
+  })
+}
