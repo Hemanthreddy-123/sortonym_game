@@ -8,7 +8,7 @@ export async function startGame({ token, level }) {
   })
 }
 
-export async function submitGame({ token, roundId, synonyms, antonyms, timeTaken, reason, level }) {
+export async function submitGame({ token, roundId, synonyms, antonyms, timeTaken, reason, level, gameCode, roundNumber }) {
   return await httpJson('/api/game/submit', {
     method: 'POST',
     token,
@@ -19,6 +19,8 @@ export async function submitGame({ token, roundId, synonyms, antonyms, timeTaken
       timeTaken,
       reason,
       level,
+      gameCode, // Optional: for Team Game Sync
+      roundNumber // Optional: for tracking round progress 
     },
   })
 }

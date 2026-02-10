@@ -1154,3 +1154,167 @@ body.dark-mode .scroll-nav-btn:active {
         /* Slightly stronger shadow for visibility */
     }
 }
+
+/* =====================================================
+   PLAY GAME DROPDOWN - SCREENSHOT MATCH
+   ===================================================== */
+
+.play-game-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.play-game-btn {
+    background-color: #00A63F;
+    /* Brand Green */
+    color: white;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 1rem;
+    padding: 14px 32px;
+    border-radius: 12px;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 166, 63, 0.25);
+    cursor: pointer;
+}
+
+.play-game-btn:hover {
+    background-color: #009036;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 166, 63, 0.35);
+}
+
+.play-game-btn:active {
+    transform: translateY(0);
+}
+
+.play-game-btn i {
+    font-size: 1.2rem;
+}
+
+/* Dropdown Menu */
+.game-mode-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 0;
+    width: 280px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    /* clean border shadow */
+    overflow: hidden;
+    z-index: 1000;
+    padding: 8px 0;
+    animation: fadeInDropdown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Dropdown Items */
+.menu-item-main {
+    width: 100%;
+    text-align: left;
+    background: white;
+    border: none;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Space for chevron */
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.menu-item-main:hover {
+    background-color: #F9FAFB;
+}
+
+.menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item-content i.icon-individual {
+    color: #00A63F;
+    /* Green */
+    font-size: 1.25rem;
+}
+
+.menu-item-content i.icon-team {
+    color: #3B82F6;
+    /* Blue */
+    font-size: 1.25rem;
+}
+
+.chevron-icon {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    transition: transform 0.2s;
+}
+
+.menu-divider {
+    height: 1px;
+    background-color: #F3F4F6;
+    margin: 4px 0;
+}
+
+/* Sub-menu container */
+.submenu-container {
+    background-color: #F9FAFB;
+    border-top: 1px solid #F3F4F6;
+    padding: 8px 0;
+}
+
+.menu-item-sub {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 10px 24px 10px 60px;
+    /* Indented */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4B5563;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.menu-item-sub:hover {
+    color: #111827;
+    background-color: #F3F4F6;
+}
+
+.menu-item-sub i {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
+/* Styling specifically for the chevron */
+.menu-item-main[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+}

@@ -1,0 +1,27 @@
+/* CTA Buttons Container */
+.cta-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}
+
+.cta-buttons .btn {
+    min-width: 200px;
+}
+
+/* Mobile Responsive for CTA Buttons */
+@media (max-width: 768px) {
+    .cta-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
+        min-width: auto;
+    }
+}

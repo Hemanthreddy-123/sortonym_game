@@ -9,6 +9,8 @@ from django.views import View
 from django.utils import timezone
 from django.db.models import Q
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from .auth import (
     ExternalAuthError,
@@ -484,6 +486,37 @@ class ApiGameSubmitView(View):
             total_correct=correct_count,
             time_taken=time_taken
         )
+
+        # --- Update Lobby Results for Team Game (Real-Time Sync) ---
+        game_code = (payload.get('gameCode') or '').strip().upper()
+        # Note: LOBBIES is defined later in this file, but available at runtime
+        if game_code and game_code in LOBBIES:
+            lobby = LOBBIES[game_code]
+            
+            # Identify player's team
+            is_team_a = any(p['id'] == email for p in lobby['teams'].get('A', []))
+            is_team_b = any(p['id'] == email for p in lobby['teams'].get('B', []))
+            
+            selected_team = 'A' if is_team_a else 'B' if is_team_b else None
+            
+            if selected_team:
+                if 'results' not in lobby:
+                    lobby['results'] = []
+                
+                round_num = payload.get('roundNumber')
+                
+                # Append result
+                lobby['results'].append({
+                    'player': player_name,
+                    'player_email': email,
+                    'team': selected_team,
+                    'round': round_num,
+                    'score': total_score,
+                    'total_correct': correct_count,
+                    'time_taken': time_taken,
+                    'accuracy': correct_count, # Simplified
+                    'timestamp': timezone.now().isoformat()
+                })
         
         return JsonResponse({
             'score': total_score,
@@ -588,3 +621,140 @@ class ApiGoogleLoginView(View):
             return JsonResponse({'error': f'Failed to verify token with Google: {str(e)}'}, status=502)
         except Exception as e:
             return JsonResponse({'error': 'An internal error occurred during Google Login.'}, status=500)
+
+
+# --- TEAM LOBBY API (In-Memory for Real-Time Sync) ---
+
+# Global in-memory store for active lobbies
+# Format: { 'CODE': { code: 'CODE', host: 'email', hostName: 'name', players: [], teams: {A:[], B:[]}, settings: {...}, status: 'waiting' } }
+LOBBIES = {}
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApiLobbyCreateView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        session_payload = _get_session_payload(request)
+        if not session_payload:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+        user_email = session_payload.get('email')
+        user_name = session_payload.get('display_name') or user_email.split('@')[0]
+        
+        payload = _json_body(request)
+        team_name = payload.get('teamName')
+        
+        # Generate Code
+        code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=6))
+        
+        # Init Lobby
+        LOBBIES[code] = {
+            'code': code,
+            'host': user_email,
+            'hostName': user_name,
+            'teamName': team_name,
+            'players': [{
+                'id': user_email,
+                'name': user_name,
+                'picture': None,
+                'isHost': True
+            }],
+            'teams': {
+                'A': [],
+                'B': []
+            },
+            'difficulty': 'MEDIUM',
+            'status': 'WAITING',
+            'created_at': timezone.now().isoformat()
+        }
+        
+        return JsonResponse({'code': code, 'lobby': LOBBIES[code]})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApiLobbyJoinView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        session_payload = _get_session_payload(request)
+        if not session_payload:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+            
+        user_email = session_payload.get('email')
+        user_name = session_payload.get('display_name') or user_email.split('@')[0]
+        
+        payload = _json_body(request)
+        code = (payload.get('code') or '').upper().strip()
+        
+        if code not in LOBBIES:
+            return JsonResponse({'error': 'Lobby not found'}, status=404)
+            
+        lobby = LOBBIES[code]
+        
+        # Add player if not exists
+        if not any(p['id'] == user_email for p in lobby['players']):
+            lobby['players'].append({
+                'id': user_email,
+                'name': user_name,
+                'picture': None,
+                'isHost': False
+            })
+            
+        return JsonResponse({'code': code, 'lobby': lobby})
+
+
+class ApiLobbyStatusView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        code = request.GET.get('code', '').upper().strip()
+        if code not in LOBBIES:
+            return JsonResponse({'error': 'Lobby not found'}, status=404)
+            
+        return JsonResponse(LOBBIES[code])
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApiLobbyUpdateView(View):
+    def post(self, request: HttpRequest) -> JsonResponse:
+        session_payload = _get_session_payload(request)
+        if not session_payload:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+            
+        user_email = session_payload.get('email')
+        
+        payload = _json_body(request)
+        code = (payload.get('code') or '').upper().strip()
+        action = payload.get('action') 
+        
+        if code not in LOBBIES:
+            return JsonResponse({'error': 'Lobby not found'}, status=404)
+            
+        lobby = LOBBIES[code]
+        
+        if action == 'join_team':
+            team = payload.get('team') # 'A' or 'B'
+            if team not in ['A', 'B']:
+                return JsonResponse({'error': 'Invalid team'}, status=400)
+                
+            # Remove from both teams first
+            lobby['teams']['A'] = [p for p in lobby['teams']['A'] if p['id'] != user_email]
+            lobby['teams']['B'] = [p for p in lobby['teams']['B'] if p['id'] != user_email]
+            
+            # Add to target team
+            player_data = next((p for p in lobby['players'] if p['id'] == user_email), None)
+            if not player_data:
+                # Fallback
+                player_data = {'id': user_email, 'name': user_email.split('@')[0], 'picture': None}
+                
+            lobby['teams'][team].append(player_data)
+            
+        elif action == 'leave_team':
+             lobby['teams']['A'] = [p for p in lobby['teams']['A'] if p['id'] != user_email]
+             lobby['teams']['B'] = [p for p in lobby['teams']['B'] if p['id'] != user_email]
+             
+        elif action == 'set_difficulty':
+            if lobby['host'] != user_email:
+                return JsonResponse({'error': 'Only host can change difficulty'}, status=403)
+            lobby['difficulty'] = payload.get('difficulty')
+
+        elif action == 'start_game':
+            if lobby['host'] != user_email:
+                return JsonResponse({'error': 'Only host can start game'}, status=403)
+            lobby['status'] = 'STARTED'
+            
+        return JsonResponse(lobby)

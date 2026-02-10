@@ -1,0 +1,527 @@
+/* =====================================================
+   TEAM RESULTS PAGE - V2 Redesign (Exact Match)
+   Clean, Modern Dashboard Layout
+   ===================================================== */
+
+:root {
+    --brand-green: #00A63F;
+    --brand-dark-green: #008031;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-success: #059669;
+    --bg-light: #F9FAFB;
+    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --gold: #F59E0B;
+}
+
+.team-results-page-v2 {
+    min-height: 100vh;
+    background-color: var(--bg-light);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.results-container-v2 {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* --- Header Section --- */
+.header-v2 {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.header-v2 h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+}
+
+.meta-info-row {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.meta-info-row .divider {
+    color: #E5E7EB;
+}
+
+/* --- Winner Banner --- */
+.winner-banner-v2 {
+    background: linear-gradient(135deg, #00A63F 0%, #008031 100%);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0, 166, 63, 0.2);
+    margin-bottom: 32px;
+}
+
+.winner-banner-v2 h2 {
+    font-size: 1.875rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.winner-banner-v2 p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* --- Comparison Section (VS) --- */
+.comparison-section-v2 {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 32px;
+    position: relative;
+}
+
+.team-card-v2 {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    text-align: center;
+    border: 1px solid #E5E7EB;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.team-card-v2.winner {
+    border: 2px solid var(--brand-green);
+    background: #F0FDF4;
+}
+
+.team-name-header h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: #111827;
+}
+
+.team-name-header .underline {
+    width: 40px;
+    height: 3px;
+    background: #E5E7EB;
+    margin: 8px auto 16px;
+    border-radius: 2px;
+}
+
+.winner-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--brand-green);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+/* Stats Styling */
+.stat-box-large {
+    background: #F3F4F6;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.stat-box-large .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.stat-box-large .value {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #111827;
+    line-height: 1;
+}
+
+.winner-card .stat-box-large {
+    background: #DCFCE7;
+    /* Light green tint */
+}
+
+.winner-card .stat-box-large .value {
+    color: var(--brand-dark-green);
+}
+
+.stat-box-medium {
+    background: white;
+    /* Or light gray if needed */
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #F3F4F6;
+}
+
+.stat-box-medium .label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.stat-box-medium .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #374151;
+}
+
+.stat-box-players {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #F3F4F6;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.stat-box-players .icon-circle {
+    width: 36px;
+    height: 36px;
+    background: #111827;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+}
+
+.winner-card .stat-box-players .icon-circle {
+    background: var(--brand-green);
+}
+
+.stat-box-players .text-info {
+    text-align: left;
+}
+
+.stat-box-players .label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+.stat-box-players .value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+
+/* VS Circle */
+.vs-circle-v2 {
+    width: 50px;
+    height: 50px;
+    background: #111827;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* --- MVP Banner --- */
+.mvp-banner-v2 {
+    background: var(--gold);
+    border-radius: 16px;
+    padding: 20px 24px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 16px rgba(245, 158, 11, 0.2);
+}
+
+.mvp-icon-circle {
+    width: 48px;
+    height: 48px;
+    background: white;
+    color: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.mvp-info {
+    flex: 1;
+    margin-left: 20px;
+}
+
+.mvp-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.mvp-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 2px 0;
+}
+
+.mvp-subtext {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.mvp-score {
+    text-align: right;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px 16px;
+    border-radius: 12px;
+    backdrop-filter: blur(4px);
+}
+
+.mvp-score .label {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    margin-bottom: 2px;
+}
+
+.mvp-score .value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+/* --- User Performance Card --- */
+.user-performance-card-v2 {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid #E5E7EB;
+    margin-bottom: 32px;
+}
+
+.user-performance-card-v2 .card-header {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-performance-card-v2 .card-header i {
+    color: var(--brand-green);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.stat-green-box {
+    background: #ECFDF5;
+    border: 1px solid #D1FAE5;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.stat-white-box {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.stats-grid .icon {
+    display: block;
+    font-size: 1.25rem;
+    color: var(--brand-green);
+    margin-bottom: 8px;
+}
+
+.stats-grid .label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.stats-grid .value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+/* --- Actions Footer --- */
+.actions-footer-v2 {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+}
+
+.btn-home-v2 {
+    background: white;
+    border: 1px solid #D1D5DB;
+    color: #374151;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-home-v2:hover {
+    background: #F3F4F6;
+    border-color: #9CA3AF;
+}
+
+.btn-play-again-v2 {
+    background: var(--brand-green);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-play-again-v2:hover {
+    background: var(--brand-dark-green);
+}
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .comparison-section-v2 {
+        grid-template-columns: 1fr;
+        /* Stack vertically */
+        gap: 30px;
+    }
+
+    .vs-circle-v2 {
+        margin: -15px auto;
+        /* Overlap slightly */
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        /* Stack stats on mobile */
+    }
+
+    .mvp-banner-v2 {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+
+    .mvp-info {
+        margin: 0;
+    }
+
+    .mvp-score {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Player Results Breakdown */
+.player-results-list {
+    margin-top: 20px;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 16px;
+}
+
+.player-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 0.95rem;
+    color: #374151;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.player-result-row:last-child {
+    border-bottom: none;
+}
+
+.player-result-name {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+}
+
+.player-result-score {
+    font-weight: 800;
+    color: #111827;
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 6px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.you-badge {
+    font-size: 0.65rem;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

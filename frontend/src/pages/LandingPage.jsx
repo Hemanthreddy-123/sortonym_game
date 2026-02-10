@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx'
 
 import userAvatar from '../assets/user_avatar.png'
 import '../styles/landing.css'
+import '../styles/cta-buttons.css'
 import { useTheme } from '../hooks/useTheme'
 
 function LandingPage() {
@@ -13,11 +14,30 @@ function LandingPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(member?.name || '')
 
+  /* GAME MODE DROPDOWN STATE */
+  const [showGameModeMenu, setShowGameModeMenu] = useState(false)
+  const [showTeamOptions, setShowTeamOptions] = useState(false)
+
   /* DAILY CHALLENGE STATES */
   const [showDailyPopup, setShowDailyPopup] = useState(false)
   const [showConfirmDailyModal, setShowConfirmDailyModal] = useState(false)
   const [showAlreadyPlayedModal, setShowAlreadyPlayedModal] = useState(false)
   const [timeToNextChallenge, setTimeToNextChallenge] = useState('')
+
+  /* GAME MODE DROPDOWN CLICK OUTSIDE HANDLER */
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (showGameModeMenu && !event.target.closest('.play-game-dropdown-container')) {
+        setShowGameModeMenu(false);
+        setShowTeamOptions(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showGameModeMenu]);
 
   // Daily Challenge Logic: Auto Popup
   useEffect(() => {
@@ -389,9 +409,79 @@ function LandingPage() {
             </p>
 
             <div className="landing-actions">
-              <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
-                <i className="bi bi-play-fill me-2"></i> Play Game
-              </button>
+              <div className="play-game-dropdown-container">
+                <button
+                  className="play-game-btn"
+                  onClick={() => setShowGameModeMenu(!showGameModeMenu)}
+                >
+                  <i className="bi bi-play-fill"></i> PLAY GAME
+                  <i className={`bi bi-chevron-down ms-2 chevron-icon ${showGameModeMenu ? 'rotate-180' : ''}`} style={{ transition: 'transform 0.2s', transform: showGameModeMenu ? 'rotate(180deg)' : 'none' }}></i>
+                </button>
+
+                {showGameModeMenu && (
+                  <div className="game-mode-menu">
+                    <button
+                      className="menu-item-main"
+                      onClick={() => {
+                        setShowGameModeMenu(false);
+                        navigate('/game');
+                      }}
+                    >
+                      <div className="menu-item-content">
+                        <i className="bi bi-person-fill icon-individual"></i>
+                        Individual Game
+                      </div>
+                    </button>
+
+                    <div className="menu-divider"></div>
+
+                    <div>
+                      <button
+                        className="menu-item-main"
+                        aria-expanded={showTeamOptions}
+                        onClick={() => {
+                          setShowTeamOptions(!showTeamOptions);
+                        }}
+                      >
+                        <div className="menu-item-content">
+                          <i className="bi bi-people-fill icon-team"></i>
+                          Team Game
+                        </div>
+                        <i className="bi bi-chevron-down chevron-icon"></i>
+                      </button>
+
+                      {showTeamOptions && (
+                        <div className="submenu-container">
+                          <button
+                            className="menu-item-sub"
+                            onClick={() => {
+                              setShowGameModeMenu(false);
+                              setShowTeamOptions(false);
+                              navigate('/create-team');
+                            }}
+                          >
+                            <i className="bi bi-plus-circle"></i>
+                            Create Team
+                          </button>
+
+                          <button
+                            className="menu-item-sub"
+                            onClick={() => {
+                              setShowGameModeMenu(false);
+                              setShowTeamOptions(false);
+                              navigate('/join-game');
+                            }}
+                          >
+                            <i className="bi bi-box-arrow-in-right"></i>
+                            Join with Code
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button className="btn btn-outline-green btn-lg" onClick={() => navigate('/leaderboard')}>
                 <i className="bi bi-trophy me-2"></i> Leaderboard
               </button>
@@ -526,9 +616,80 @@ function LandingPage() {
             <div className="cta-card">
               <h2>Ready to Challenge Yourself?</h2>
               <p>Join thousands of players improving their vocabulary skills</p>
-              <button className="btn btn-primary btn-lg" onClick={() => navigate('/game')}>
-                <i className="bi bi-play-fill me-2"></i> Start Playing Now
-              </button>
+              <div className="cta-buttons">
+                <div className="play-game-dropdown-container">
+                  <button
+                    className="play-game-btn"
+                    onClick={() => setShowGameModeMenu(!showGameModeMenu)}
+                  >
+                    <i className="bi bi-play-fill"></i> START PLAYING NOW
+                    <i className={`bi bi-chevron-down ms-2 chevron-icon ${showGameModeMenu ? 'rotate-180' : ''}`} style={{ transition: 'transform 0.2s', transform: showGameModeMenu ? 'rotate(180deg)' : 'none' }}></i>
+                  </button>
+
+                  {showGameModeMenu && (
+                    <div className="game-mode-menu" style={{ top: 'auto', bottom: '100%', marginBottom: '12px', transformOrigin: 'bottom left' }}>
+                      <button
+                        className="menu-item-main"
+                        onClick={() => {
+                          setShowGameModeMenu(false);
+                          navigate('/game');
+                        }}
+                      >
+                        <div className="menu-item-content">
+                          <i className="bi bi-person-fill icon-individual"></i>
+                          Individual Game
+                        </div>
+                      </button>
+
+                      <div className="menu-divider"></div>
+
+                      <div>
+                        <button
+                          className="menu-item-main"
+                          aria-expanded={showTeamOptions}
+                          onClick={() => {
+                            setShowTeamOptions(!showTeamOptions);
+                          }}
+                        >
+                          <div className="menu-item-content">
+                            <i className="bi bi-people-fill icon-team"></i>
+                            Team Game
+                          </div>
+                          <i className="bi bi-chevron-down chevron-icon"></i>
+                        </button>
+
+                        {showTeamOptions && (
+                          <div className="submenu-container">
+                            <button
+                              className="menu-item-sub"
+                              onClick={() => {
+                                setShowGameModeMenu(false);
+                                setShowTeamOptions(false);
+                                navigate('/create-team');
+                              }}
+                            >
+                              <i className="bi bi-plus-circle"></i>
+                              Create Team
+                            </button>
+
+                            <button
+                              className="menu-item-sub"
+                              onClick={() => {
+                                setShowGameModeMenu(false);
+                                setShowTeamOptions(false);
+                                navigate('/join-game');
+                              }}
+                            >
+                              <i className="bi bi-box-arrow-in-right"></i>
+                              Join with Code
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
 

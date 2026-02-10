@@ -1,0 +1,368 @@
+/* JoinGamePage.css - Dashboard Style */
+
+.join-team-page {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.join-team-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Header Section */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.header-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 0.5rem 0;
+}
+
+.header-content p {
+    color: #6b7280;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.btn-history {
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-history:hover {
+    background: #f3f4f6;
+}
+
+.btn-create-team {
+    background: #00A63F;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 166, 63, 0.2);
+    transition: all 0.2s;
+}
+
+.btn-create-team:hover {
+    background: #008c35;
+    transform: translateY(-1px);
+}
+
+/* Stats Cards */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    position: relative;
+    border: 1px solid #eee;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.team-icon {
+    background: #e6f4ea;
+    color: #00A63F;
+}
+
+.member-icon {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.stat-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.stat-badge.positive {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Main Join Card */
+.join-card {
+    background: white;
+    border-radius: 16px;
+    padding: 3rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    margin: 0 auto;
+    border: 1px solid #eee;
+}
+
+.card-icon-wrapper {
+    margin-bottom: 1.5rem;
+}
+
+.card-icon {
+    width: 64px;
+    height: 64px;
+    background: #00A63F;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 166, 63, 0.3);
+}
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+}
+
+.card-subtitle {
+    color: #6b7280;
+    margin: 0 0 2rem 0;
+}
+
+.form-group {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.code-input-wrapper {
+    position: relative;
+}
+
+.code-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.2rem;
+    text-transform: uppercase;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    color: #111827;
+    transition: all 0.2s;
+    background: #f9fafb;
+}
+
+.code-input:focus {
+    outline: none;
+    border-color: #00A63F;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(0, 166, 63, 0.1);
+}
+
+.success-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #00A63F;
+    font-size: 1.25rem;
+}
+
+.helper-text {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.text-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #111827;
+    transition: all 0.2s;
+}
+
+.text-input:focus {
+    outline: none;
+    border-color: #00A63F;
+    box-shadow: 0 0 0 2px rgba(0, 166, 63, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-cancel {
+    flex: 1;
+    padding: 0.875rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.btn-join {
+    flex: 1;
+    padding: 0.875rem;
+    background: #00A63F;
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 166, 63, 0.25);
+    transition: all 0.2s;
+}
+
+.btn-join:hover {
+    background: #008c35;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(0, 166, 63, 0.35);
+}
+
+.btn-join:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.error-message {
+    color: #dc2626;
+    background: #fee2e2;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .join-team-page {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .join-card {
+        padding: 1.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}

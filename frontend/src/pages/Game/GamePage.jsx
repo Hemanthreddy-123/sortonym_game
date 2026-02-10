@@ -51,10 +51,14 @@ function GamePage() {
     // Final Results Data
     const [results, setResults] = useState(null);
 
-    // Continuous Gameplay States
+    // Continuous Gameplay States (10 rounds per difficulty)
+    const MAX_ROUNDS = 10;
     const [roundHistory, setRoundHistory] = useState([]);
     const [bestPerformance, setBestPerformance] = useState(null);
     const [roundCount, setRoundCount] = useState(0);
+
+    // Hint State
+    const [hintsRemaining, setHintsRemaining] = useState(0);
 
     // Effect: Initialize based on mode
     useEffect(() => {
@@ -98,6 +102,7 @@ function GamePage() {
         setAntonymBox([]);
         setTimeExpired(false);
         setLevel('DAILY');
+        setHintsRemaining(1); // Hard/Daily limit
 
         try {
             const data = await startGame({ token, level: 'DAILY' });
@@ -133,7 +138,13 @@ function GamePage() {
             setAvailableWords(data.words || []);
             setTimeLeft(data.time_limit || 60);
             // Updating state again just to be safe
-            setLevel(data.level ? data.level.toUpperCase() : 'EASY');
+            const finalLevel = data.level ? data.level.toUpperCase() : (selectedLevel || 'EASY').toUpperCase();
+            setLevel(finalLevel);
+
+            // Initialize Hints based on Difficulty
+            const limits = { 'EASY': 3, 'MEDIUM': 2, 'HARD': 1, 'DAILY': 1 };
+            setHintsRemaining(limits[finalLevel] || 1);
+
             startTimeRef.current = Date.now();
             setGameState('playing');
         } catch (err) {
@@ -255,6 +266,32 @@ function GamePage() {
 
     const [showSubmissionModal, setShowSubmissionModal] = useState(false);
 
+    /* ================= HINT HANDLER ================= */
+
+    const handleHint = () => {
+        if (hintsRemaining <= 0 || availableWords.length === 0 || timeExpired) return;
+
+        // Pick a random word from available pool
+        const randomIndex = Math.floor(Math.random() * availableWords.length);
+        const wordToMove = availableWords[randomIndex];
+
+        // Determine correct box based on ID prefix
+        const isSynonym = wordToMove.id.startsWith('syn_');
+        const targetBox = isSynonym ? 'synonyms' : 'antonyms';
+
+        // Move the word
+        setAvailableWords(prev => prev.filter(w => w.id !== wordToMove.id));
+        if (isSynonym) {
+            setSynonymBox(prev => [...prev, wordToMove]);
+        } else {
+            setAntonymBox(prev => [...prev, wordToMove]);
+        }
+
+        // Decrement hints and Apply Time Penalty (5s) to reduce score slightly
+        setHintsRemaining(prev => prev - 1);
+        setTimeLeft(prev => Math.max(1, prev - 5));
+    };
+
     /* ================= ACTIONS ================= */
 
     const handleSubmit = async () => {
@@ -296,15 +333,39 @@ function GamePage() {
                 // Add to round history
                 const updatedHistory = [...roundHistory, currentRound];
                 setRoundHistory(updatedHistory);
-                setRoundCount(prev => prev + 1);
+                const newRoundCount = roundCount + 1;
+                setRoundCount(newRoundCount);
 
                 // Update best performance if this round is better
-                if (!bestPerformance || currentRound.score > bestPerformance.score) {
-                    setBestPerformance(currentRound);
-                }
+                const newBestPerformance = (!bestPerformance || currentRound.score > bestPerformance.score)
+                    ? currentRound
+                    : bestPerformance;
+                setBestPerformance(newBestPerformance);
 
-                // Start next round automatically
-                initializeGame(level);
+                // Check if we've completed all 10 rounds
+                if (newRoundCount >= MAX_ROUNDS) {
+                    // Game session complete - show final results
+                    navigate('/result', {
+                        state: {
+                            results: {
+                                score: newBestPerformance.score,
+                                total_correct: newBestPerformance.total_correct,
+                                time_bonus: newBestPerformance.time_bonus,
+                                accuracy: newBestPerformance.accuracy
+                            },
+                            gameData: newBestPerformance.gameData,
+                            synonymBox: newBestPerformance.synonyms,
+                            antonymBox: newBestPerformance.antonyms,
+                            roundsPlayed: newRoundCount,
+                            isBestPerformance: true,
+                            isSessionComplete: true,
+                            allRounds: updatedHistory
+                        }
+                    });
+                } else {
+                    // Continue to next round
+                    initializeGame(level);
+                }
             }
         } catch (err) {
             console.error("Submission Failed:", err);
@@ -528,20 +589,43 @@ function GamePage() {
                             borderRadius: '12px',
                             fontWeight: '700'
                         }}>
-                            Round {roundCount + 1}
+                            Round {roundCount + 1} of {MAX_ROUNDS}
                         </span>
                     )}
                 </div>
                 <Timer timeLeft={timeLeft} formatTime={formatTime} />
-                <div className="header-level" data-level={level}>
-                    {bestPerformance && !isDaily ? (
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '9px', opacity: 0.7 }}>Best</div>
-                            <div style={{ fontSize: '13px', fontWeight: '800' }}>{bestPerformance.score.toFixed(1)}</div>
-                        </div>
-                    ) : (
-                        <>Lvl: {level}</>
-                    )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div
+                        onClick={handleHint}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            cursor: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0) ? 'pointer' : 'default',
+                            opacity: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0) ? 1 : 0.4,
+                            background: '#FEF3C7',
+                            color: '#D97706', // Gold-amber
+                            padding: '6px 12px',
+                            borderRadius: '99px',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            border: '1px solid #FCD34D'
+                        }}
+                    >
+                        <i className="bi bi-lightbulb-fill"></i>
+                        {level === 'EASY' ? <span>Assist ({hintsRemaining})</span> : <span>{hintsRemaining}</span>}
+                    </div>
+
+                    <div className="header-level" data-level={level}>
+                        {bestPerformance && !isDaily ? (
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '9px', opacity: 0.7 }}>Best</div>
+                                <div style={{ fontSize: '13px', fontWeight: '800' }}>{bestPerformance.score.toFixed(1)}</div>
+                            </div>
+                        ) : (
+                            <>Lvl: {level}</>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -669,7 +753,7 @@ function GamePage() {
 
             <footer className="game-footer-controls ">
                 <GameButton
-                    label="Submit "
+                    label="Next Round"
                     onClick={handleSubmit}
                     disabled={timeExpired || synonymBox.length + antonymBox.length === 0}
                     variant="submit"

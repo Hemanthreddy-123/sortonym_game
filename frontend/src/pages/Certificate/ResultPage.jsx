@@ -20,7 +20,9 @@ const ResultPage = () => {
         synonymBox = [],
         antonymBox = [],
         roundsPlayed = 0,
-        isBestPerformance = false
+        isBestPerformance = false,
+        isSessionComplete = false,
+        allRounds = []
     } = location.state || {};
 
     // Fallback for standalone reload
@@ -116,21 +118,23 @@ const ResultPage = () => {
                             <i className="bi bi-trophy-fill"></i>
                         </div>
                         <div className="header-text">
-                            <span className="subtitle">CHALLENGE COMPLETE</span>
+                            <span className="subtitle">
+                                {isSessionComplete ? 'SESSION COMPLETE' : 'CHALLENGE COMPLETE'}
+                            </span>
                             <h1>
-                                Outstanding Performance!
+                                {isSessionComplete ? 'Game Session Finished!' : 'Outstanding Performance!'}
                                 {isBestPerformance && roundsPlayed > 0 && (
                                     <span style={{
                                         marginLeft: '12px',
                                         fontSize: '0.5em',
-                                        background: '#fbbf24',
-                                        color: '#000',
+                                        background: isSessionComplete ? '#10b981' : '#fbbf24',
+                                        color: '#fff',
                                         padding: '4px 12px',
                                         borderRadius: '20px',
                                         fontWeight: '800',
                                         verticalAlign: 'middle'
                                     }}>
-                                        🏆 Best of {roundsPlayed} Rounds
+                                        {isSessionComplete ? `✓ ${roundsPlayed}/10 Rounds` : `🏆 Best of ${roundsPlayed} Rounds`}
                                     </span>
                                 )}
                             </h1>
