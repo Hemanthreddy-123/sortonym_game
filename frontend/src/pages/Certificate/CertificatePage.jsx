@@ -23,7 +23,7 @@ const CertificatePage = React.forwardRef(({ member, level }, ref) => {
                     {/* Header: Brand Name */}
                     <div className="cert-header">
                         <div className="brand-tag">
-                            <i className="bi bi-award-fill"></i> SORTONYM CHALLENGE
+                            <i className="bi bi-square"></i> SORTONYM CHALLENGE
                         </div>
                     </div>
 
@@ -54,20 +54,12 @@ const CertificatePage = React.forwardRef(({ member, level }, ref) => {
 
                         {/* Center: Badge */}
                         <div className="footer-col center">
-                            <div className="cert-badge-container">
-                                <div className="verified-badge">
-                                    <i className="bi bi-patch-check-fill badge-icon"></i>
-                                </div>
-                                <div className="cert-id">ID: {certificateId}</div>
-                            </div>
+                            <CertificateSeal />
                         </div>
 
                         {/* Right: Signature */}
                         <div className="footer-col right">
-                            <div className="cert-signature">
-                                <div className="meta-value">Yash Agarwal</div>
-                                <div className="meta-label">AUTHORIZED SIGNATURE</div>
-                            </div>
+                            <CertificateSignature />
                         </div>
                     </div>
                 </div>

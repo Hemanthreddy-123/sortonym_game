@@ -167,70 +167,41 @@ const TeamGamePage = () => {
 
     // Polling for multiplayer completion
     useEffect(() => {
-    let interval;
-
-    if (gameState === 'waiting_for_others') {
-
-        const checkSync = async () => {
-            try {
-                const res = await fetch(`/api/get/results/${gameCode}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!res.ok) return;
-
-                const data = await res.json();
-
-                if (data) { alert(1)
-                    clearInterval(interval);
-
-                    // ✅ Get latest score per player
-                    const latestMap = {};
-                    data.results.forEach(r => {
-                        latestMap[r.player_id] = r;
+        let interval;
+        if (gameState === 'waiting_for_others') {
+            const checkSync = async () => {
+                try {
+                    const res = await fetch(`/api/get/results/${gameCode}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    if (res.ok) {
+                        const data = await res.json();
 
-                    const finalResults = Object.values(latestMap);
-
-                    // ✅ Calculate team totals
-                    const teamTotals = finalResults.reduce(
-                        (acc, curr) => {
-                            acc[curr.team] += curr.score;
-                            return acc;
-                        },
-                        { A: 0, B: 0 }
-                    );
-
-                    // ✅ Find MVP
-                    const mvp = finalResults.reduce((prev, curr) =>
-                        prev.score > curr.score ? prev : curr
-                    );
-
-                    navigate(`/team-results/${gameCode}`, {
-    state: {
-        gameCode,
-        difficulty,
-        teams: data.teams,
-        teamTotals,
-        mvp,
-        rounds: MAX_ROUNDS
-    }
-});
-
+                        // Use backend's all_finished flag for perfect synchronization
+                        if (data.all_finished) {
+                            clearInterval(interval);
+                            navigate('/team-results', {
+                                state: {
+                                    gameCode,
+                                    teamA: data.teams.A,
+                                    teamB: data.teams.B,
+                                    difficulty,
+                                    displayName: myName,
+                                    currentPlayer: currentPlayer || member
+                                }
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Sync check error", e);
                 }
+            };
 
-            } catch (e) {
-                console.error("Sync check error", e);
-            }
-        };
-
-        checkSync();
-        interval = setInterval(checkSync, 1000);
-    }
-
-    return () => clearInterval(interval);
-
-}, [gameState]);
+            checkSync();
+            interval = setInterval(checkSync, 1000); // 1s polling
+        }
+        return () => clearInterval(interval);
+    }, [gameState, gameCode, token, navigate, myName, currentPlayer, member, difficulty]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);

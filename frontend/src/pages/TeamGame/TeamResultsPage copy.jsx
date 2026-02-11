@@ -1,108 +1,50 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
-import { useEffect, useState } from "react";
 import "./TeamResultsPage.css";
 
 const TeamResultsPage = () => {
     const { state } = useLocation();
-    const { gameCode: paramGameCode } = useParams();
     const navigate = useNavigate();
-    const { member, token } = useAuth();
+    const { member } = useAuth();
 
-    const [gameData, setGameData] = useState(state || null);
-    const [loading, setLoading] = useState(!state);
-
-    const gameCode = state?.gameCode || paramGameCode;
-
-    // 🔥 Fetch if state missing (refresh safe)
-    useEffect(() => {
-        if (!state && gameCode) {
-            const fetchResults = async () => {
-                try {
-                    const res = await fetch(`/api/get/results/${gameCode}`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-
-                    const data = await res.json();
-                    setGameData(data);
-                } catch (err) {
-                    console.error("Failed to fetch results", err);
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-            fetchResults();
-        }
-    }, [state, gameCode, token]);
-
-    if (loading || !gameData) {
-        return (
-            <div style={{ padding: "40px", textAlign: "center" }}>
-                Loading Results...
-            </div>
-        );
+    if (!state) {
+        navigate("/");
+        return null;
     }
 
-    // 🔥 Extract data safely
-    const teams = gameData.teams || state?.teams || {};
-    const difficulty = gameData.difficulty || state?.difficulty;
-    const rounds = state?.rounds || 5;
-    const results = gameData.results || [];
-
-    // 🔥 Calculate team totals (latest 5 per player)
-    const playerLatestScores = {};
-
-    results.forEach((r) => {
-        if (!playerLatestScores[r.player_id]) {
-            playerLatestScores[r.player_id] = [];
-        }
-        playerLatestScores[r.player_id].push(r);
-    });
-
-    const finalPlayerScores = Object.values(playerLatestScores).map((scores) =>
-        scores.slice(-5)
-    );
-
-    const teamTotals = { A: 0, B: 0 };
-    let mvp = null;
-
-    finalPlayerScores.forEach((playerRounds) => {
-        const total = playerRounds.reduce((sum, r) => sum + r.score, 0);
-        const team = playerRounds[0].team;
-
-        teamTotals[team] += total;
-
-        if (!mvp || total > mvp.score) {
-            mvp = {
-                player_id: playerRounds[0].player_id,
-                player: playerRounds[0].player,
-                team,
-                score: total
-            };
-        }
-    });
+    const {
+        gameCode,
+        difficulty,
+        teams,
+        teamTotals,
+        mvp,
+        rounds
+    } = state;
 
     const teamAPlayers = teams?.A || [];
     const teamBPlayers = teams?.B || [];
 
-    const teamAScore = teamTotals.A || 0;
-    const teamBScore = teamTotals.B || 0;
+    const teamAScore = teamTotals?.A || 0;
+    const teamBScore = teamTotals?.B || 0;
 
     const winnerTeam =
         teamAScore > teamBScore
             ? "A"
             : teamBScore > teamAScore
-            ? "B"
-            : "DRAW";
+                ? "B"
+                : "DRAW";
 
-    const averageA = (teamAScore / rounds).toFixed(2);
-    const averageB = (teamBScore / rounds).toFixed(2);
+    const winnerScore =
+        winnerTeam === "A" ? teamAScore : teamBScore;
 
-    const isMe = (player) =>
-        player?.name === member?.name;
+    const winnerPlayers =
+        winnerTeam === "A" ? teamAPlayers : teamBPlayers;
+
+    const averageA = rounds ? (teamAScore / rounds).toFixed(2) : 0;
+    const averageB = rounds ? (teamBScore / rounds).toFixed(2) : 0;
+
+    const isMe = (name) =>
+        name === member?.name;
 
     return (
         <div className="team-results-page-v2">
@@ -153,8 +95,27 @@ const TeamResultsPage = () => {
                         </div>
 
                         <div className="stat-box-players">
-                            <span className="label">Players</span>
-                            <span className="value">{teamAPlayers.length}</span>
+                            <div className="icon-circle">
+                                <i className="bi bi-people-fill"></i>
+                            </div>
+                            <div className="text-info">
+                                <span className="label">Players</span>
+                                <span className="value">{teamAPlayers.length}</span>
+                            </div>
+                        </div>
+
+                        {/* Player Breakdown */}
+                        <div className="player-results-list">
+                            {teamAPlayers.map((player, idx) => (
+                                <div key={idx} className="player-result-row">
+                                    <div className="player-result-name">
+                                        {player}
+                                        {isMe(player) && (
+                                            <span className="you-badge">You</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
@@ -183,8 +144,27 @@ const TeamResultsPage = () => {
                         </div>
 
                         <div className="stat-box-players">
-                            <span className="label">Players</span>
-                            <span className="value">{teamBPlayers.length}</span>
+                            <div className="icon-circle">
+                                <i className="bi bi-people-fill"></i>
+                            </div>
+                            <div className="text-info">
+                                <span className="label">Players</span>
+                                <span className="value">{teamBPlayers.length}</span>
+                            </div>
+                        </div>
+
+                        {/* Player Breakdown */}
+                        <div className="player-results-list">
+                            {teamBPlayers.map((player, idx) => (
+                                <div key={idx} className="player-result-row">
+                                    <div className="player-result-name">
+                                        {player}
+                                        {isMe(player) && (
+                                            <span className="you-badge">You</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -196,7 +176,7 @@ const TeamResultsPage = () => {
 
                         <div className="mvp-info">
                             <span className="mvp-label">Most Valuable Player</span>
-                            <h3 className="mvp-name">{mvp.player}</h3>
+                            <h3 className="mvp-name">{mvp.display_name || mvp.player_id}</h3>
                             <div className="mvp-subtext">
                                 Team {mvp.team}
                             </div>

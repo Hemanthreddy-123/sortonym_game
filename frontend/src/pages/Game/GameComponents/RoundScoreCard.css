@@ -1,0 +1,265 @@
+.round-score-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.round-score-card {
+    background: #F8FAFC;
+    width: 100%;
+    max-width: 700px;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.score-card-header {
+    background: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.score-card-header h2 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1E293B;
+}
+
+.total-xp-badge {
+    background: #00A63F;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(0, 166, 63, 0.3);
+}
+
+.score-card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(85vh - 160px);
+}
+
+.score-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.section-header {
+    /* padding: 16px 20px; */
+    border-radius: 12px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+}
+
+.synonyms .section-header {
+    background: #058F50;
+}
+
+.antonyms .section-header {
+    background: #FA70A1;
+}
+
+.section-header i {
+    font-size: 1.4rem;
+}
+
+.section-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+}
+
+.section-header span {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.count-badge {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.word-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.word-row {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-left: 5px solid transparent;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.word-row.correct {
+    border-left-color: #10B981;
+}
+
+.word-row.incorrect {
+    border-left-color: #EF4444;
+}
+
+.status-icon i {
+    font-size: 1.3rem;
+}
+
+.correct .status-icon i {
+    color: #10B981;
+}
+
+.incorrect .status-icon i {
+    color: #EF4444;
+}
+
+.word-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.word-text {
+    font-weight: 700;
+    color: #1E293B;
+    font-size: 1.05rem;
+}
+
+.status-text {
+    font-size: 0.8rem;
+    color: #64748B;
+}
+
+.xp-pill {
+    background: #00A63F;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.75rem;
+}
+
+.score-card-footer {
+    padding: 20px;
+    background: white;
+    display: flex;
+    gap: 20px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.btn-next-round {
+    flex: 2;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #94A3B8;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* Enabled state for Next Round */
+.btn-next-round:hover {
+    background: #F1F5F9;
+}
+
+/* If you want it to look active/primary */
+.btn-next-round.active {
+    background: #00A63F;
+    color: white;
+    border-color: #00A63F;
+    box-shadow: 0 4px 14px rgba(0, 166, 63, 0.3);
+}
+
+.btn-exit-game {
+    flex: 1;
+    background: white;
+    border: 2px solid #00A63F;
+    color: #00A63F;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-exit-game:hover {
+    background: #ECFDF5;
+}
+
+/* Responsiveness */
+@media (max-width: 768px) {
+    .score-card-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .round-score-card {
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .score-card-header {
+        padding: 15px 20px;
+    }
+
+    .score-card-footer {
+        flex-direction: column-reverse;
+        padding: 15px 20px;
+    }
+
+    .btn-next-round,
+    .btn-exit-game {
+        width: 100%;
+    }
+}

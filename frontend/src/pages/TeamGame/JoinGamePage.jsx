@@ -24,6 +24,49 @@ const JoinGamePage = () => {
         }
     };
 
+    // --- API HELPERS ---
+    const authenticatedFetch = async (url, options = {}) => {
+        // Retrieve token from local storage or context if accessible directly, 
+        // but here we might need to rely on the hook if token is exposed. 
+        // NOTE: The `useAuth` hook in this file exposes `member`. 
+        // I need to assume `useAuth` also exposes `token`.
+        // Let's verify `useAuth` usage in other files.
+        // Update: CreateTeamPage uses `const { member, token } = useAuth();`
+        // So I should update the destructuring above as well.
+
+        const token = localStorage.getItem('token'); // Fallback or use context
+
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...options.headers
+        };
+
+        try {
+            const response = await fetch(url, { ...options, headers });
+
+            const contentType = response.headers.get("content-type");
+            let data = null;
+
+            if (contentType && contentType.includes("application/json")) {
+                const text = await response.text();
+                data = text ? JSON.parse(text) : {};
+            } else {
+                data = {};
+            }
+
+            if (!response.ok) {
+                const errorMessage = data.error || data.message || `API Error: ${response.status}`;
+                throw new Error(errorMessage);
+            }
+
+            return data;
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            throw error;
+        }
+    };
+
     const handleJoinTeam = async () => {
         if (!teamCode) {
             setError('Please enter a team code');
@@ -39,17 +82,37 @@ const JoinGamePage = () => {
         }
 
         setIsLoading(true);
-        // Simulate API check
-        setTimeout(() => {
-            setIsLoading(false);
-            navigate('/team-lobby', {
+        setError('');
+
+        try {
+            // Strictly validate Name & Code via API
+            await authenticatedFetch('/api/lobby/join', {
+                method: 'POST',
+                body: JSON.stringify({
+                    code: teamCode,
+                    displayName: displayName
+                })
+            });
+
+            // If successful, redirect to Lobby
+            navigate(`/team-lobby?code=${teamCode}`, {
                 state: {
                     gameCode: teamCode,
-                    isJoining: true,
-                    displayName
+                    isJoining: false, // Already joined
+                    displayName // Current name (compulsory)
                 }
             });
-        }, 800);
+
+        } catch (err) {
+            // Handle "Name already exists" or other errors
+            if (err.message.toLowerCase().includes('name')) {
+                setError('This name is already taken in the lobby. Please choose another.');
+            } else {
+                setError(err.message || 'Failed to join lobby. Check code and try again.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -128,11 +191,11 @@ const JoinGamePage = () => {
                     </div>
 
                     <div className="form-group">
-                        <label>Your Display Name</label>
+                        <label>Your Display Name <span style={{ color: 'red' }}>*</span></label>
                         <input
                             type="text"
                             className="text-input"
-                            placeholder="Enter your display name"
+                            placeholder="Enter your display name (Compulsory)"
                             value={displayName}
                             onChange={(e) => setDisplayName(e.target.value)}
                         />

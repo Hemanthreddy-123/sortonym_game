@@ -20,6 +20,7 @@ const CreateTeamPage = () => {
     const [teamSize, setTeamSize] = useState('10');
     const [isLoading, setIsLoading] = useState(false);
     const [showTips, setShowTips] = useState(false);
+    const [creatorName, setCreatorName] = useState(member?.name || ''); // Mandatory Creator Name
 
     // Searchable Region States
     const [isRegionDropdownOpen, setIsRegionDropdownOpen] = useState(false);
@@ -76,6 +77,14 @@ const CreateTeamPage = () => {
         '#f97316', // Orange
         '#eab308', // Yellow
         '#475569', // Slate
+        '#ec4899', // Pink
+        '#6366f1', // Indigo
+        '#06b6d4', // Cyan
+        '#84cc16', // Lime
+        '#f43f5e', // Rose
+        '#d946ef', // Fuchsia
+        '#8b5cf6', // Violet
+        '#10b981', // Emerald
     ];
 
     // --- API HELPERS ---
@@ -114,22 +123,32 @@ const CreateTeamPage = () => {
     };
 
     const handleCreateTeam = async () => {
+        if (!creatorName.trim()) { alert('Please enter your display name'); return; }
         if (!teamName.trim()) { alert('Please enter a team name'); return; }
         if (!teamTag.trim()) { alert('Please enter a team tag'); return; }
 
         setIsLoading(true);
         try {
+            // 1. Create the lobby
             const data = await authenticatedFetch('/api/lobby/create', {
                 method: 'POST',
-                body: JSON.stringify({ teamName, teamTag })
+                body: JSON.stringify({
+                    teamName,
+                    teamTag,
+                    name: creatorName.trim() // Identify host name to backend
+                })
             });
             console.log('Lobby Created:', data);
 
+            // CHANGED: Do NOT auto-join the host to a team.
+            // Host must specifically select Team A or B in the lobby.
+
             // Navigate to Lobby with the new Game Code
-            navigate('/team-lobby', {
+            navigate(`/team-lobby?code=${data.code}`, {
                 state: {
                     gameCode: data.code,
-                    isHost: true // Explicitly passing host status
+                    isHost: true,
+                    displayName: creatorName.trim() // Carry name to Selection/Lobby 
                 }
             });
         } catch (err) {
@@ -157,16 +176,18 @@ const CreateTeamPage = () => {
     return (
         <div className="team-builder-page">
             {/* Navigation */}
-            <div className="team-builder-nav">
-                <button className="back-link" onClick={() => navigate('/home')}>
-                    <i className="bi bi-arrow-left"></i>
-                    <span>Back to Home</span>
-                </button>
-            </div>
+
 
             <div className="team-builder-container">
                 {/* Header */}
-                <div className="team-builder-header">
+                {/* Header */}
+                <div className="team-builder-header" style={{ position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: '0', top: '50%', transform: 'translateY(-50%)' }}>
+                        <button className="back-link" onClick={() => navigate('/home')}>
+                            <i className="bi bi-arrow-left"></i>
+                            <span>Back to Home</span>
+                        </button>
+                    </div>
                     <h1>Build Your Dream Team</h1>
                     <p>Create a unique identity, set your rules, and prepare for battle.</p>
                 </div>
@@ -199,7 +220,7 @@ const CreateTeamPage = () => {
                                     />
                                 </div>
 
-                                <div style={{ flex: 1 }}>
+                                <div className="color-picker-container">
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', fontWeight: '600', color: '#4b5563' }}>Team Color</label>
                                     <div className="color-picker-compact">
                                         {teamColors.map(color => (
@@ -218,6 +239,18 @@ const CreateTeamPage = () => {
 
                         <div className="section-card">
                             <h3 className="section-title"><i className="bi bi-card-text"></i> Team Info</h3>
+
+                            <div className="modern-input-group">
+                                <label>Your Display Name <span className="required">*</span></label>
+                                <input
+                                    type="text"
+                                    className="modern-input"
+                                    placeholder="Enter your name"
+                                    value={creatorName}
+                                    onChange={(e) => setCreatorName(e.target.value)}
+                                    maxLength={20}
+                                />
+                            </div>
 
                             <div className="modern-input-group">
                                 <label>Team Name <span className="required">*</span></label>

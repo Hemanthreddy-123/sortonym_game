@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext.jsx";
 import { startGame, submitGame } from "../../api/gameApi.js";
+import { getPrefetchedData, prefetchLevelData } from "../../utils/gamePrefetch.js";
+import { toPng } from 'html-to-image';
+import SoftPopup from "../../components/SoftPopup/SoftPopup.jsx";
 import "./GamePage.css";
 
 // Components
@@ -9,6 +12,7 @@ import Timer from "./GameComponents/Timer.jsx";
 import WordTile from "./GameComponents/WordTile.jsx";
 import TargetZone from "./GameComponents/TargetZone.jsx";
 import GameButton from "./GameComponents/GameButton.jsx";
+import RoundScoreCard from "./GameComponents/RoundScoreCard.jsx";
 
 
 import { useSearchParams } from "react-router-dom";
@@ -16,7 +20,7 @@ import { useSearchParams } from "react-router-dom";
 // ... existing imports
 
 function GamePage() {
-    const { token, user, member } = useAuth();
+    const { user, member } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const isDaily = searchParams.get('mode') === 'daily';
@@ -56,74 +60,41 @@ function GamePage() {
     const [roundHistory, setRoundHistory] = useState([]);
     const [bestPerformance, setBestPerformance] = useState(null);
     const [roundCount, setRoundCount] = useState(0);
+    const [usedTargetWords, setUsedTargetWords] = useState(new Set()); // Track used words
 
     // Hint State
     const [hintsRemaining, setHintsRemaining] = useState(0);
 
-    // Effect: Initialize based on mode
-    useEffect(() => {
-        if (!gameData && token && gameState === 'idle') {
-            if (isDaily) {
-                initializeDailyGame();
-            } else {
-                setGameState('level-selection');
-            }
-        }
-    }, [token, gameState, gameData, isDaily]);
+    // Round Results States
+    const [showRoundResults, setShowRoundResults] = useState(false);
+    const [currentRoundResults, setCurrentRoundResults] = useState(null);
 
-    // Effect: Timer Logic
-    useEffect(() => {
-        let timer;
-        if (gameState === 'playing' && timeLeft > 0) {
-            timer = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        submitOnTimeUp();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => clearInterval(timer);
-    }, [gameState, timeLeft]);
+    // Soft Popup States
+    const [popupConfig, setPopupConfig] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info'
+    });
 
     /* ================= CORE LOGIC ================= */
 
-    const handleLevelSelect = (selectedLevel) => {
-        setLevel(selectedLevel);
-        initializeGame(selectedLevel);
+    const showPopup = useCallback((title, message, type = 'info', autoClose = false, autoCloseDelay = 3000) => {
+        setPopupConfig({
+            isOpen: true,
+            title,
+            message,
+            type,
+            autoClose,
+            autoCloseDelay
+        });
+    }, []);
+
+    const closePopup = () => {
+        setPopupConfig(prev => ({ ...prev, isOpen: false }));
     };
 
-    const initializeDailyGame = async () => {
-        setGameState('loading');
-        setSynonymBox([]);
-        setAntonymBox([]);
-        setTimeExpired(false);
-        setLevel('DAILY');
-        setHintsRemaining(1); // Hard/Daily limit
-
-        try {
-            const data = await startGame({ token, level: 'DAILY' });
-            setGameData(data);
-            setAvailableWords(data.words || []);
-            setTimeLeft(data.time_limit || 45); // Hard default
-            startTimeRef.current = Date.now();
-            setGameState('playing');
-        } catch (err) {
-            console.error("Daily Game Start Failed:", err);
-            // Check if error is 403 (Already played)
-            if (err.status === 403 || err.message?.includes('already played')) {
-                alert("You have already played the Daily Challenge today. Check back tomorrow!");
-                navigate('/daily-challenge-results'); // Redirect to results instead of home
-            } else {
-                setGameState('error');
-            }
-        }
-    };
-
-    const initializeGame = async (selectedLevel) => {
+    const initializeGame = useCallback(async (selectedLevel) => {
         setGameState('loading');
         setSynonymBox([]);
         setAntonymBox([]);
@@ -133,7 +104,37 @@ function GamePage() {
         const currentLevel = selectedLevel || level;
 
         try {
-            const data = await startGame({ token, level: currentLevel });
+            let data = getPrefetchedData(currentLevel);
+            if (!data) {
+                // Request a new word, avoiding previously used words
+                data = await startGame({ 
+                    level: currentLevel,
+                    excludeWords: Array.from(usedTargetWords) // Send used words to backend
+                });
+            }
+
+            // Check if we got a duplicate word (fallback check)
+            if (usedTargetWords.has(data.anchor_word)) {
+                // If duplicate, try again up to 3 times
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        const newData = await startGame({ 
+                            level: currentLevel,
+                            excludeWords: Array.from(usedTargetWords)
+                        });
+                        if (!usedTargetWords.has(newData.anchor_word)) {
+                            data = newData;
+                            break;
+                        }
+                    } catch (e) {
+                        console.warn(`Retry ${attempt + 1} failed for unique word`);
+                    }
+                }
+            }
+
+            // Add the new target word to used words set
+            setUsedTargetWords(prev => new Set([...prev, data.anchor_word]));
+
             setGameData(data);
             setAvailableWords(data.words || []);
             setTimeLeft(data.time_limit || 60);
@@ -147,10 +148,173 @@ function GamePage() {
 
             startTimeRef.current = Date.now();
             setGameState('playing');
+
+            // Prefetch next round in background for seamless "Next Round" click
+            prefetchLevelData(currentLevel);
         } catch (err) {
             setGameState('error');
             console.error("Game Start Failed:", err);
         }
+    }, [level, usedTargetWords]);
+
+    const handleSubmit = useCallback(async () => {
+        if (gameState !== 'playing' && !timeExpired) return;
+
+        setGameState('loading');
+
+        const timeTaken = gameData?.time_limit ? (gameData.time_limit - timeLeft) : 0;
+
+        const submissionData = {
+            roundId: gameData?.score_id || gameData?.round_id,
+            synonyms: synonymBox.map(w => w.word),
+            antonyms: antonymBox.map(w => w.word),
+            timeTaken,
+            level
+        };
+
+        try {
+            const res = await submitGame(submissionData);
+
+            if (isDaily) {
+                setShowSubmissionModal(true);
+                setGameState('completed');
+            } else {
+                // Continuous Gameplay: Track this round's performance
+                const currentRound = {
+                    score: res.score || 0,
+                    total_correct: res.total_correct || 0,
+                    time_bonus: res.time_bonus || 0,
+                    accuracy: res.accuracy || 0,
+                    timeTaken,
+                    synonyms: synonymBox,
+                    antonyms: antonymBox,
+                    gameData,
+                    timestamp: Date.now()
+                };
+
+                // Add to round history
+                const updatedHistory = [...roundHistory, currentRound];
+                setRoundHistory(updatedHistory);
+                const newRoundCount = roundCount + 1;
+                setRoundCount(newRoundCount);
+
+                // Update best performance if this round is better
+                const newBestPerformance = (!bestPerformance || currentRound.score > bestPerformance.score)
+                    ? currentRound
+                    : bestPerformance;
+                setBestPerformance(newBestPerformance);
+
+                // Prepare results for scorecard
+                const scorecardResults = {
+                    roundNumber: newRoundCount,
+                    synonyms: synonymBox.map(w => ({
+                        word: w.word,
+                        isCorrect: w.id.startsWith('syn_')
+                    })),
+                    antonyms: antonymBox.map(w => ({
+                        word: w.word,
+                        isCorrect: w.id.startsWith('ant_')
+                    })),
+                    totalXP: Math.round(res.score || 0),
+                    isLastRound: newRoundCount >= MAX_ROUNDS,
+                    updatedHistory,
+                    newBestPerformance
+                };
+
+                setCurrentRoundResults(scorecardResults);
+                setShowRoundResults(true);
+                setGameState('idle'); // Stop gameplay until user clicks Next
+            }
+        } catch (err) {
+            console.error("Submission Failed:", err);
+            if (!isDaily) {
+                // If submission fails, just initialize next game to avoid getting stuck
+                initializeGame(level);
+            } else {
+                setGameState('error');
+                showPopup(
+                    'Submission Failed',
+                    'Submission failed. Please try again.',
+                    'error'
+                );
+            }
+        }
+    }, [gameState, timeExpired, gameData, timeLeft, synonymBox, antonymBox, level, isDaily, roundHistory, bestPerformance, roundCount, initializeGame, showPopup]);
+
+    const initializeDailyGame = useCallback(async () => {
+        setGameState('loading');
+        setSynonymBox([]);
+        setAntonymBox([]);
+        setTimeExpired(false);
+        setLevel('DAILY');
+        setHintsRemaining(1); // Hard/Daily limit
+
+        try {
+            let data = getPrefetchedData('DAILY');
+            if (!data) {
+                data = await startGame({ level: 'DAILY' });
+            }
+
+            setGameData(data);
+            setAvailableWords(data.words || []);
+            setTimeLeft(data.time_limit || 45); // Hard default
+            startTimeRef.current = Date.now();
+            setGameState('playing');
+
+            // Prefetch next daily (just in case) or next round
+            prefetchLevelData('DAILY');
+        } catch (err) {
+            console.error("Daily Game Start Failed:", err);
+            // Check if error is 403 (Already played)
+            if (err.status === 403 || err.message?.includes('already played')) {
+                showPopup(
+                    'Daily Challenge Already Played',
+                    'You have already played the Daily Challenge today. Check back tomorrow!',
+                    'warning'
+                );
+                setTimeout(() => {
+                    navigate('/daily-challenge-results'); // Redirect to results instead of home
+                }, 1000);
+            } else {
+                setGameState('error');
+            }
+        }
+    }, [showPopup, navigate]);
+
+    // Effect: Initialize based on mode
+    useEffect(() => {
+        if (!gameData && gameState === 'idle') {
+            if (isDaily) {
+                initializeDailyGame();
+            } else {
+                setGameState('level-selection');
+            }
+        }
+    }, [gameState, gameData, isDaily, initializeDailyGame]);
+
+    // Effect: Timer Logic
+    useEffect(() => {
+        let timer;
+        if (gameState === 'playing' && timeLeft > 0) {
+            timer = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        setTimeExpired(true);
+                        // Call handleSubmit after setting timeExpired
+                        setTimeout(handleSubmit, 0);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [gameState, timeLeft, handleSubmit]);
+
+    const handleLevelSelect = (selectedLevel) => {
+        setLevel(selectedLevel);
+        initializeGame(selectedLevel);
     };
 
     const submitOnTimeUp = async () => {
@@ -294,88 +458,31 @@ function GamePage() {
 
     /* ================= ACTIONS ================= */
 
-    const handleSubmit = async () => {
-        if (gameState !== 'playing' && !timeExpired) return;
+    const handleNextRoundAction = () => {
+        setShowRoundResults(false);
+        const results = currentRoundResults;
 
-        setGameState('loading');
-
-        const timeTaken = gameData?.time_limit ? (gameData.time_limit - timeLeft) : 0;
-
-        const submissionData = {
-            token,
-            roundId: gameData?.score_id || gameData?.round_id,
-            synonyms: synonymBox.map(w => w.word),
-            antonyms: antonymBox.map(w => w.word),
-            timeTaken,
-            level
-        };
-
-        try {
-            const res = await submitGame(submissionData);
-
-            if (isDaily) {
-                setShowSubmissionModal(true);
-                setGameState('completed');
-            } else {
-                // Continuous Gameplay: Track this round's performance
-                const currentRound = {
-                    score: res.score || 0,
-                    total_correct: res.total_correct || 0,
-                    time_bonus: res.time_bonus || 0,
-                    accuracy: res.accuracy || 0,
-                    timeTaken,
-                    synonyms: synonymBox,
-                    antonyms: antonymBox,
-                    gameData,
-                    timestamp: Date.now()
-                };
-
-                // Add to round history
-                const updatedHistory = [...roundHistory, currentRound];
-                setRoundHistory(updatedHistory);
-                const newRoundCount = roundCount + 1;
-                setRoundCount(newRoundCount);
-
-                // Update best performance if this round is better
-                const newBestPerformance = (!bestPerformance || currentRound.score > bestPerformance.score)
-                    ? currentRound
-                    : bestPerformance;
-                setBestPerformance(newBestPerformance);
-
-                // Check if we've completed all 10 rounds
-                if (newRoundCount >= MAX_ROUNDS) {
-                    // Game session complete - show final results
-                    navigate('/result', {
-                        state: {
-                            results: {
-                                score: newBestPerformance.score,
-                                total_correct: newBestPerformance.total_correct,
-                                time_bonus: newBestPerformance.time_bonus,
-                                accuracy: newBestPerformance.accuracy
-                            },
-                            gameData: newBestPerformance.gameData,
-                            synonymBox: newBestPerformance.synonyms,
-                            antonymBox: newBestPerformance.antonyms,
-                            roundsPlayed: newRoundCount,
-                            isBestPerformance: true,
-                            isSessionComplete: true,
-                            allRounds: updatedHistory
-                        }
-                    });
-                } else {
-                    // Continue to next round
-                    initializeGame(level);
+        if (results.isLastRound) {
+            // Game session complete - show final results
+            navigate('/result', {
+                state: {
+                    results: {
+                        score: results.newBestPerformance.score,
+                        total_correct: results.newBestPerformance.total_correct,
+                        time_bonus: results.newBestPerformance.time_bonus,
+                        accuracy: results.newBestPerformance.accuracy
+                    },
+                    gameData: results.newBestPerformance.gameData,
+                    synonymBox: results.newBestPerformance.synonyms,
+                    antonymBox: results.newBestPerformance.antonyms,
+                    roundsPlayed: results.roundNumber,
+                    isBestPerformance: true,
+                    isSessionComplete: true,
+                    allRounds: results.updatedHistory
                 }
-            }
-        } catch (err) {
-            console.error("Submission Failed:", err);
-            if (!isDaily) {
-                // Even on error, continue gameplay
-                initializeGame(level);
-            } else {
-                setGameState('error');
-                alert("Submission failed. Please try again.");
-            }
+            });
+        } else {
+            initializeGame(level);
         }
     };
 
@@ -389,6 +496,7 @@ function GamePage() {
         setRoundHistory([]);
         setBestPerformance(null);
         setRoundCount(0);
+        setUsedTargetWords(new Set()); // Reset used words for new game session
         initializeGame();
     };
 
@@ -439,7 +547,13 @@ function GamePage() {
             link.download = `My_Sortonym_Score.png`;
             link.href = dataUrl;
             link.click();
-            alert("Performance Summary saved! You can now share it.");
+            showPopup(
+                'Performance Saved',
+                'Performance Summary saved! You can now share it.',
+                'success',
+                true,
+                2000
+            );
         } catch (err) {
             console.error('Failed to share results:', err);
         }
@@ -453,17 +567,26 @@ function GamePage() {
 
     /* Note: Result page now navigates to /result route */
 
+    /* ================= GAME UI (Playing Mode) ================= */
+
+    // SKELETON LOADING STATE
+    const isLoading = gameState === 'loading';
+    const displayWords = isLoading
+        ? Array(8).fill({ id: 'skel', word: 'Loading...' })
+        : availableWords;
+    const displayAnchor = isLoading ? 'LOADING...' : gameData?.anchor_word;
+
+    // Only block completely if error or level selection
     if (gameState === 'error') {
         return (
             <div className="game-page error-mode" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '20px', background: '#f8fafc' }}>
                 <h2 style={{ color: '#ef4444' }}>Oops! Failed to load game.</h2>
                 <p style={{ color: '#64748b' }}>Check your connection or try again.</p>
-                <button className="btn btn-submit" style={{ width: '200px' }} onClick={initializeGame}>Try Again</button>
+                <button className="btn btn-submit" style={{ width: '200px' }} onClick={() => initializeGame()}>Try Again</button>
                 <button className="btn btn-exit" style={{ width: '200px' }} onClick={handleExit}>Back to Home</button>
             </div>
         );
     }
-
 
     if (gameState === 'level-selection') {
         return (
@@ -562,69 +685,41 @@ function GamePage() {
         );
     }
 
-    if (gameState === 'loading') {
-        return (
-            <div className="game-page loading-mode" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc' }}>
-                <div className="loader">Loading Challenge...</div>
-                <p style={{ marginTop: '10px', color: '#64748b' }}>Getting your words ready...</p>
-            </div>
-        );
-    }
-
-    /* ================= GAME UI (Playing Mode) ================= */
-
     return (
-        <div className="game-page playing-mode">
+        <div className={`game-page playing-mode ${isLoading ? 'is-loading' : ''}`}>
 
             <header className="game-header-compact">
-                <div className="header-player">
-                    <i className="bi bi-person-fill"></i> {member?.name}
+                <div className="header-left">
+                    <div className="header-player">
+                        <i className="bi bi-person-fill"></i>
+                        <span className={`player-name-text ${isLoading ? 'skeleton' : ''}`}>{isLoading ? '' : member?.name}</span>
+                    </div>
                     {roundCount > 0 && !isDaily && (
-                        <span style={{
-                            marginLeft: '12px',
-                            fontSize: '11px',
-                            background: 'var(--soft-mint)',
-                            color: 'var(--brand-green)',
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            fontWeight: '700'
-                        }}>
-                            Round {roundCount + 1} of {MAX_ROUNDS}
+                        <span className="round-count-badge">
+                            R{roundCount + 1}/{MAX_ROUNDS}
                         </span>
                     )}
                 </div>
-                <Timer timeLeft={timeLeft} formatTime={formatTime} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div
-                        onClick={handleHint}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            cursor: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0) ? 'pointer' : 'default',
-                            opacity: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0) ? 1 : 0.4,
-                            background: '#FEF3C7',
-                            color: '#D97706', // Gold-amber
-                            padding: '6px 12px',
-                            borderRadius: '99px',
-                            fontSize: '13px',
-                            fontWeight: '700',
-                            border: '1px solid #FCD34D'
-                        }}
-                    >
-                        <i className="bi bi-lightbulb-fill"></i>
-                        {level === 'EASY' ? <span>Assist ({hintsRemaining})</span> : <span>{hintsRemaining}</span>}
-                    </div>
 
-                    <div className="header-level" data-level={level}>
-                        {bestPerformance && !isDaily ? (
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '9px', opacity: 0.7 }}>Best</div>
-                                <div style={{ fontSize: '13px', fontWeight: '800' }}>{bestPerformance.score.toFixed(1)}</div>
-                            </div>
-                        ) : (
-                            <>Lvl: {level}</>
-                        )}
+                <div className="header-center">
+                    <div className={`header-timer ${isLoading ? 'skeleton' : ''} ${timeLeft <= 10 && !isLoading ? 'critical' : ''}`}>
+                        {isLoading ? '' : formatTime(timeLeft)}
+                    </div>
+                </div>
+
+                <div className="header-right">
+                    <div className="header-right-group">
+                        <div
+                            onClick={!isLoading ? handleHint : undefined}
+                            className="hint-control-btn"
+                            style={{
+                                cursor: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0 && !isLoading) ? 'pointer' : 'default',
+                                opacity: (hintsRemaining > 0 && !timeExpired && availableWords.length > 0 && !isLoading) ? 1 : 0.4
+                            }}
+                        >
+                            <i className="bi bi-lightbulb-fill"></i>
+                            {level === 'EASY' ? <span>Assist ({hintsRemaining})</span> : <span>{hintsRemaining}</span>}
+                        </div>
                     </div>
                 </div>
             </header>
@@ -649,11 +744,11 @@ function GamePage() {
                                 color: 'var(--brand-black)',
                                 margin: 0
                             }}>Word Bank</h3>
-                            <span style={{
+                            <span className={`zone-count ${isLoading ? 'skeleton' : ''}`} style={{
                                 fontSize: '12px',
                                 fontWeight: '700',
                                 color: 'var(--slate-gray)'
-                            }}>{availableWords.length} words</span>
+                            }}>{isLoading ? '' : `${availableWords.length} words`}</span>
                         </div>
                         <div
                             className={`source-pool ${dragOverBox === 'available' ? 'drag-over' : ''}`}
@@ -662,17 +757,21 @@ function GamePage() {
                             onDrop={(e) => handleDrop(e, "available")}
                             data-zone="available"
                         >
-                            {availableWords.map((word) => (
-                                <WordTile
-                                    key={word.id}
-                                    word={word}
-                                    isDragging={draggedWord?.id === word.id}
-                                    onDragStart={handleDragStart}
-                                    onDragEnd={handleDragEnd}
-                                    onTouchStart={handleTouchStart}
-                                    onTouchMove={handleTouchMove}
-                                    onTouchEnd={handleTouchEnd}
-                                />
+                            {displayWords.map((word, index) => (
+                                isLoading ? (
+                                    <div key={index} className="word-card skeleton"></div>
+                                ) : (
+                                    <WordTile
+                                        key={word.id}
+                                        word={word}
+                                        isDragging={draggedWord?.id === word.id}
+                                        onDragStart={handleDragStart}
+                                        onDragEnd={handleDragEnd}
+                                        onTouchStart={handleTouchStart}
+                                        onTouchMove={handleTouchMove}
+                                        onTouchEnd={handleTouchEnd}
+                                    />
+                                )
                             ))}
                         </div>
                     </div>
@@ -693,7 +792,7 @@ function GamePage() {
                             letterSpacing: '1.2px',
                             marginBottom: '8px'
                         }}>Target Word</span>
-                        <h1 style={{
+                        <h1 className={`anchor-word-text ${isLoading ? 'skeleton' : ''}`} style={{
                             fontSize: '40px',
                             fontWeight: '900',
                             color: 'var(--brand-black)',
@@ -701,7 +800,7 @@ function GamePage() {
                             textTransform: 'uppercase',
                             letterSpacing: '-1px',
                             textAlign: 'center'
-                        }}>{gameData?.anchor_word}</h1>
+                        }}>{displayAnchor}</h1>
                         <p style={{
                             fontSize: '12px',
                             color: 'var(--slate-gray)',
@@ -819,6 +918,30 @@ function GamePage() {
                     </div>
                 </div>
             )}
+
+            {/* ROUND RESULTS OVERLAY */}
+            {showRoundResults && currentRoundResults && (
+                <RoundScoreCard
+                    roundNumber={currentRoundResults.roundNumber}
+                    synonyms={currentRoundResults.synonyms}
+                    antonyms={currentRoundResults.antonyms}
+                    totalXP={currentRoundResults.totalXP}
+                    isLastRound={currentRoundResults.isLastRound}
+                    onNextRound={handleNextRoundAction}
+                    onExit={handleExit}
+                />
+            )}
+
+            {/* SOFT POPUP */}
+            <SoftPopup
+                isOpen={popupConfig.isOpen}
+                onClose={closePopup}
+                title={popupConfig.title}
+                message={popupConfig.message}
+                type={popupConfig.type}
+                autoClose={popupConfig.autoClose}
+                autoCloseDelay={popupConfig.autoCloseDelay}
+            />
         </div>
 
     );

@@ -1,7 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import LoginPage from './pages/LoginPage.jsx'
 import LandingPage from './pages/LandingPage.jsx'
-import RequireAuth from './auth/RequireAuth.jsx'
 import GamePage from './pages/Game/GamePage.jsx'
 import ResultPage from './pages/Certificate/ResultPage.jsx'
 import ScorePageStandalone from './pages/ScorePageStandalone.jsx'
@@ -16,97 +14,23 @@ import JoinGamePage from './pages/TeamGame/JoinGamePage.jsx'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/auth" replace />} />
-      <Route path="/auth" element={<LoginPage />} />
-      <Route
-        path="/home"
-        element={
-          <RequireAuth>
-            <LandingPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/game"
-        element={
-          <RequireAuth>
-            <GamePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/result"
-        element={
-          <RequireAuth>
-            <ResultPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/score-standalone"
-        element={
-          <RequireAuth>
-            <ScorePageStandalone />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/leaderboard"
-        element={
-          <RequireAuth>
-            <LeaderboardPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/daily-challenge-results"
-        element={
-          <RequireAuth>
-            <DailyChallengeResults />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/join-game"
-        element={
-          <RequireAuth>
-            <JoinGamePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/team-lobby"
-        element={
-          <RequireAuth>
-            <TeamGameLobby />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/create-team"
-        element={
-          <RequireAuth>
-            <CreateTeamPage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/team-game"
-        element={
-          <RequireAuth>
-            <TeamGamePage />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/team-results"
-        element={
-          <RequireAuth>
-            <TeamResultsPage />
-          </RequireAuth>
-        }
-      />
-      <Route path="*" element={<Navigate to="/auth" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="/home" element={<LandingPage />} />
+
+      {/* All Routes are now Public */}
+      <Route path="/game" element={<GamePage />} />
+      <Route path="/result" element={<ResultPage />} />
+      <Route path="/score-standalone" element={<ScorePageStandalone />} />
+      <Route path="/leaderboard" element={<LeaderboardPage />} />
+      <Route path="/daily-challenge-results" element={<DailyChallengeResults />} />
+      <Route path="/join-game" element={<JoinGamePage />} />
+      <Route path="/team-lobby" element={<TeamGameLobby />} />
+      <Route path="/create-team" element={<CreateTeamPage />} />
+      <Route path="/team-game" element={<TeamGamePage />} />
+      <Route path="/team-results" element={<TeamResultsPage />} />
+      <Route path="/team-results/:gameCode" element={<TeamResultsPage />} />
+
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
 }

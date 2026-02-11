@@ -1,99 +1,41 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { apiLogin, apiLogout, apiMe, apiOtpVerify } from '../api/authApi.js'
-import { clearAuthToken, getAuthToken, setAuthToken } from './tokenStorage.js'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => getAuthToken())
-  const [user, setUser] = useState(null)
-  const [member, setMember] = useState(null)
-  const [status, setStatus] = useState('loading')
+  // Always logged in as a Guest Player
+  const [member, setMember] = useState({
+    id: 'guest',
+    name: 'Guest Player',
+    email: 'guest@sortonym.com'
+  })
+  const [status, setStatus] = useState('ready')
 
   const updateMember = useCallback((updatedData) => {
     setMember((prev) => ({ ...prev, ...updatedData }))
   }, [])
 
-  const applySession = useCallback((data) => {
-    setAuthToken(data.token)
-    setToken(data.token)
-    setUser(data.user)
-  }, [])
-
-  const refresh = useCallback(async () => {
-    const currentToken = getAuthToken()
-    if (!currentToken) {
-      setUser(null)
-      setMember(null)
-      setToken(null)
-      setStatus('ready')
-      return
-    }
-
-    try {
-      const data = await apiMe({ token: currentToken })
-      setToken(currentToken)
-      setUser(data.user)
-      setMember(data.member)
-    } catch {
-      clearAuthToken()
-      setToken(null)
-      setUser(null)
-      setMember(null)
-    } finally {
-      setStatus('ready')
-    }
-  }, [])
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  const signIn = useCallback(async ({ username, password }) => {
-    const data = await apiLogin({ username, password })
-    applySession(data)
-    await refresh()
-    return data
-  }, [applySession, refresh])
-
-  const signInWithOtp = useCallback(
-    async ({ challenge_id, otp }) => {
-      const data = await apiOtpVerify({ challenge_id, otp })
-      applySession(data)
-      await refresh()
-      return data
-    },
-    [applySession, refresh],
-  )
-
-  const signInWithGoogle = useCallback(
-    async ({ token: googleToken }) => {
-      const data = await import('../api/authApi.js').then((m) => m.apiGoogleLogin({ token: googleToken }))
-      applySession(data)
-      await refresh()
-      return data
-    },
-    [applySession, refresh],
-  )
-
-  const signOut = useCallback(async () => {
-    const currentToken = getAuthToken()
-    if (currentToken) {
-      try {
-        await apiLogout({ token: currentToken })
-      } finally {
-        clearAuthToken()
-      }
-    }
-
-    setToken(null)
-    setUser(null)
-    setMember(null)
-  }, [])
+  // Mocked empty functions for compatibility with components that might still call them
+  const signIn = useCallback(async () => ({ success: true }), [])
+  const signInWithOtp = useCallback(async () => ({ success: true }), [])
+  const signInWithGoogle = useCallback(async () => ({ success: true }), [])
+  const signOut = useCallback(async () => { }, [])
+  const refresh = useCallback(async () => { }, [])
 
   const value = useMemo(
-    () => ({ token, user, member, status, signIn, signInWithOtp, signInWithGoogle, signOut, refresh, updateMember }),
-    [token, user, member, status, signIn, signInWithOtp, signInWithGoogle, signOut, refresh, updateMember],
+    () => ({
+      token: 'guest-session',
+      user: { id: 'guest', username: 'guest' },
+      member,
+      status,
+      signIn,
+      signInWithOtp,
+      signInWithGoogle,
+      signOut,
+      refresh,
+      updateMember
+    }),
+    [member, status, signIn, signInWithOtp, signInWithGoogle, signOut, refresh, updateMember],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

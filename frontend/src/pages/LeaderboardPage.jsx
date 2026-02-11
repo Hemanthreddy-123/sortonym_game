@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { getLeaderboard } from '../api/gameApi.js'
 import { useAuth } from '../auth/AuthContext.jsx'
 import './LeaderboardPage.css'
-import { useTheme } from '../hooks/useTheme'
 
 function LeaderboardPage() {
   const navigate = useNavigate()
-  const { token, member } = useAuth()
+  const { member } = useAuth()
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)
-  const { theme, toggleTheme } = useTheme()
   const [timeFilter, setTimeFilter] = useState('all') // 'today' | 'all'
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -19,7 +17,7 @@ function LeaderboardPage() {
       setLoading(true);
       try {
         const period = timeFilter === 'today' ? 'today' : undefined;
-        const data = await getLeaderboard({ token, period })
+        const data = await getLeaderboard({ period })
         setLeaderboard(data.leaderboard || [])
       } catch (err) {
         console.error('Failed to load leaderboard', err)
@@ -28,7 +26,7 @@ function LeaderboardPage() {
       }
     }
     fetchLeaderboard()
-  }, [token, timeFilter])
+  }, [timeFilter])
 
   const getDisplayName = (entry) => {
     if (entry.player_name) return entry.player_name;
@@ -60,10 +58,6 @@ function LeaderboardPage() {
       <div className="game-lb-controls">
         <button className="game-btn-back" onClick={() => navigate('/home')}>
           <i className="bi bi-box-arrow-right"></i> EXIT
-        </button>
-
-        <button className="theme-toggle-lb" onClick={toggleTheme}>
-          {theme === 'light' ? <i className="bi bi-moon-fill" /> : <i className="bi bi-sun-fill" />}
         </button>
 
         <div className="toggle-pill-container">

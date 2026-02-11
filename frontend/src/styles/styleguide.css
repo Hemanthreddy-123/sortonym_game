@@ -3,6 +3,9 @@
    Strictly following provided PDF
 ===================================================== */
 
+/* Import Dark Mode Styles */
+@import './dark-mode.css';
+
 /* -------------------------------
    01. Typography Imports
 -------------------------------- */

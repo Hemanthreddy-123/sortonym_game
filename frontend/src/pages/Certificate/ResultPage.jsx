@@ -4,13 +4,11 @@ import { useAuth } from '../../auth/AuthContext';
 import CertificatePage from './CertificatePage';
 import { toPng } from 'html-to-image';
 import './ResultPage.css';
-import { useTheme } from '../../hooks/useTheme';
 
 const ResultPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { member, level } = useAuth();
-    const { theme, toggleTheme } = useTheme();
     const certificateRef = useRef(null);
 
     // Get data
@@ -89,15 +87,17 @@ const ResultPage = () => {
         }
     };
     const handleDownloadCert = async () => {
-        if (!certificateRef.current) return;
+        // Use frontend generation to ensure exact design match (Image 2 style)
         try {
-            const dataUrl = await toPng(certificateRef.current, { width: 1000, height: 700 });
+            if (!certificateRef.current) return;
+            const dataUrl = await toPng(certificateRef.current, { backgroundColor: '#ffffff', width: 1000, height: 700 });
             const link = document.createElement('a');
             link.download = `${member?.name || 'Player'}_Certificate.png`;
             link.href = dataUrl;
             link.click();
         } catch (err) {
             console.error('Certificate generation failed:', err);
+            alert("Failed to generate certificate.");
         }
     };
 

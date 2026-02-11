@@ -3,6 +3,11 @@ import re
 import random
 import requests
 import os
+import io
+import wordfreq
+import base64
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 from django.http import HttpRequest, JsonResponse
 from django.views import View
@@ -11,321 +16,234 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 
-from .auth import (
-    ExternalAuthError,
-    create_signed_otp_challenge,
-    create_signed_session,
-    is_success_response,
-    load_signed_otp_challenge,
-    load_signed_session,
-    post_form_json,
-    require_env,
-)
-from .models import SortonymWord, GameResult
+from .models import SortonymWord, GameResult, Lobby
 
 SYSTEM_NAME = 'isl'
 REGISTER_ROLE = 'isl_user'
 
+# Fallback words to ensure game always starts if API/DB fails
+FALLBACK_WORDS_LIST = [
+    {
+        "word": "happy",
+        "synonyms": "joyful,cheerful,content,delighted,glad,ecstatic,elated,jubilant,merry,sunny",
+        "antonyms": "sad,unhappy,miserable,depressed,gloomy,sorrowful,dejected,downcast,melancholy,glum"
+    },
+    {
+        "word": "fast",
+        "synonyms": "quick,rapid,swift,speedy,brisk,hasty,fleet,express,nimble,velocity",
+        "antonyms": "slow,sluggish,leisurely,crawling,gradual,delayed,plodding,laggard,torpid,late"
+    },
+    {
+        "word": "love",
+        "synonyms": "adoration,affection,passion,devotion,fondness,tenderness,warmth,attachment,cherishing,worship",
+        "antonyms": "hate,hatred,loathing,detestation,dislike,animosity,hostility,abhorrence,aversion,scorn"
+    },
+    {
+        "word": "big",
+        "synonyms": "huge,large,giant,enormous,massive,colossal,gigantic,immense,mammoth,vast",
+        "antonyms": "small,tiny,little,miniature,minute,microscopic,petite,diminutive,compact,slight"
+    },
+    {
+        "word": "hot",
+        "synonyms": "boiling,scorching,searing,warm,heated,burning,sizzling,fiery,torrid,tropical",
+        "antonyms": "cold,freezing,chilly,icy,frigid,frosty,glacial,cool,nippy,polar"
+    },
+    {
+        "word": "brave",
+        "synonyms": "courageous,fearless,bold,heroic,valiant,daring,plucky,intrepid,gallant,stouthearted",
+        "antonyms": "cowardly,fearful,timid,afraid,scared,gutless,spineless,craven,shy,nervous"
+    }
+]
 
 def _normalize_phone(raw: str) -> str:
     return re.sub(r'\D+', '', (raw or '').strip())
 
-
-def _get_bearer_token(request: HttpRequest) -> str | None:
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        return None
-
-    prefix = 'Bearer '
-    if not auth_header.startswith(prefix):
-        return None
-
-    token = auth_header[len(prefix) :].strip()
-    return token or None
-
-
-def _get_session_payload(request: HttpRequest) -> dict | None:
-    token = _get_bearer_token(request)
-    if not token:
-        return None
-    try:
-        return load_signed_session(token)
-    except ExternalAuthError:
-        return None
-
-
 def _json_body(request: HttpRequest) -> dict:
-    if not request.body:
-        return {}
     try:
+        if not request.body:
+            return {}
         return json.loads(request.body.decode('utf-8'))
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
         return {}
 
+def _get_player_info(request: HttpRequest) -> dict:
+    email = 'guest@sortonym.com'
+    name = 'Guest'
+    
+    # 1. Try to get info from Authorization Header (JWT)
+    auth_header = request.headers.get('Authorization', '')
+    if 'Bearer ' in auth_header:
+        try:
+            token = auth_header.split(' ')[1]
+            # Decode JWT payload (no signature verification for now, just extraction)
+            payload_part = token.split('.')[1]
+            padded = payload_part + '=' * (4 - len(payload_part) % 4)
+            decoded_bytes = base64.b64decode(padded)
+            jwt_payload = json.loads(decoded_bytes)
+            
+            if 'email' in jwt_payload:
+                email = jwt_payload['email']
+            if 'name' in jwt_payload:
+                name = jwt_payload['name']
+            
+            # If we found an email in token, return immediately
+            if email != 'guest@sortonym.com':
+                 return {'email': email, 'name': name}
+        except Exception as e:
+            print(f"JWT Decode Error: {e}")
+            pass
 
-def _external_error_message(result: dict, default: str) -> str:
-    return result.get('error') or result.get('message') or default
-
-
-def _external_success_message(result: dict) -> str | None:
-    message = (result.get('message') or result.get('status') or '').strip()
-    return message or None
-
-
-def _post_external_or_error(
-    *,
-    url_env: str,
-    payload: dict[str, str],
-    failure_status: int,
-    failure_default_message: str,
-) -> tuple[dict | None, JsonResponse | None]:
+    # 2. Fallback to Request Body
     try:
-        url = require_env(url_env)
-    except ExternalAuthError as exc:
-        return None, JsonResponse({'error': str(exc)}, status=500)
+        payload = _json_body(request)
+        if payload:
+            email = payload.get('email') or payload.get('player_email') or email
+            # Support all possible name keys including displayName from join page
+            name = payload.get('name') or payload.get('player_name') or payload.get('displayName') or name
+            if name == 'Guest' and email != 'guest@sortonym.com':
+                 name = email.split('@')[0]
+    except Exception:
+        pass
+        
+    uid = email
+    if email == 'guest@sortonym.com' and name and name != 'Guest':
+        # Generate unique ID for guests based on name to prevent lobby overlap
+        # Using a normalized name as part of the ID string
+        safe_name = re.sub(r'[^a-zA-Z0-9]', '_', name.lower().strip())
+        uid = f"guest_{safe_name}"
+
+    return {'email': email, 'name': name, 'uid': uid}
+
+def get_words_from_wordfreq(difficulty='easy'):
+    """
+    Ultra-fast word selection using wordfreq library only - sub-second target.
+    - Easy: 3 pairs (6 words total: 3 synonyms + 3 antonyms)
+    - Medium: 4 pairs (8 words total: 4 synonyms + 4 antonyms)  
+    - Hard: 5 pairs (10 words total: 5 synonyms + 5 antonyms)
+    """
+    difficulty = difficulty.lower()
+    
+    # Define word counts based on difficulty
+    if difficulty == 'easy':
+        pairs_needed = 3
+        wordfreq_range = (500, 1500)  # Very common words
+    elif difficulty == 'medium':
+        pairs_needed = 4
+        wordfreq_range = (1500, 4000)  # Common words
+    else: # hard or daily
+        pairs_needed = 5
+        wordfreq_range = (4000, 8000)  # Less common words
 
     try:
-        result = post_form_json(url=url, payload=payload)
-    except ExternalAuthError as exc:
-        return None, JsonResponse({'error': str(exc)}, status=502)
-
-    if not is_success_response(result):
-        message = _external_error_message(result, failure_default_message)
-        return None, JsonResponse({'error': message}, status=failure_status)
-
-    return result, None
-
+        # Get random sample from wordfreq list for variety
+        start, end = wordfreq_range
+        # Fetch a larger slice (e.g., 500 words) and pick random starting point
+        total_available = end - start
+        random_offset = random.randint(0, max(0, total_available - 200))
+        
+        slice_start = start + random_offset
+        word_list = wordfreq.top_n_list('en', end)[slice_start:slice_start+150]
+        
+        # Filter for suitable words - very strict for speed
+        candidates = [
+            word for word in word_list 
+            if word.isalpha() and 4 <= len(word) <= 8  # Tight length range
+        ][:12]  # Increased to 12 candidates
+        
+        # Ultra-fast parallel API calls with aggressive timeouts
+        import concurrent.futures
+        
+        def fetch_word_data(word):
+            try:
+                # Extremely fast API calls
+                with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+                    syn_future = executor.submit(
+                        requests.get, 
+                        f'https://api.datamuse.com/words?rel_syn={word}', 
+                        timeout=0.6
+                    )
+                    ant_future = executor.submit(
+                        requests.get,
+                        f'https://api.datamuse.com/words?rel_ant={word}',
+                        timeout=0.6
+                    )
+                    
+                    syn_res = syn_future.result(timeout=0.8).json()
+                    ant_res = ant_future.result(timeout=0.8).json()
+                
+                syns = [w['word'] for w in syn_res[:15] if w['word'].isalpha() and len(w['word']) > 2]
+                ants = [w['word'] for w in ant_res[:15] if w['word'].isalpha() and len(w['word']) > 2]
+                
+                # Filter out the word itself
+                syns = [w for w in syns if w.lower() != word.lower()]
+                ants = [w for w in ants if w.lower() != word.lower()]
+                
+                if len(syns) >= pairs_needed and len(ants) >= pairs_needed:
+                    return {
+                        'word': word,
+                        'synonyms': ','.join(syns[:12]), # Store up to 12
+                        'antonyms': ','.join(ants[:12])
+                    }
+            except:
+                pass
+            return None
+        
+        # Test all candidates simultaneously for maximum speed
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(fetch_word_data, word) for word in candidates]
+            
+            # Return first successful result immediately
+            for future in concurrent.futures.as_completed(futures, timeout=1):
+                result = future.result()
+                if result:
+                    return result
+        
+        return None
+        
+    except Exception as e:
+        print(f"Word selection failed: {e}")
+        return None
 
 class HealthView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         return JsonResponse({'status': 'ok'})
 
-
-class ApiLoginView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        username_raw = (payload.get('username') or '').strip()
-        password = (payload.get('password') or '').strip()
-
-        if not username_raw or not password:
-            return JsonResponse({'error': 'Please enter username and password.'}, status=400)
-
-        # ADMIN OVERRIDE FOR TESTING
-        if username_raw == 'admin.test@sortonym.com':
-            if password == 'Admin@12345':
-                # Mock successful result
-                result = {
-                    'status': 'success',
-                    'message': 'Admin Login Successful',
-                    'display_name': 'Sortonym Admin',
-                    'phone_number': '1234567890',
-                    'user_id': 99999,
-                    'is_admin': True
-                }
-                
-                session_payload = {'email': username_raw}
-                session_payload.update(result)
-                raw_token, expires_at = create_signed_session(payload=session_payload)
-
-                return JsonResponse(
-                    {
-                        'token': raw_token,
-                        'expires_at': expires_at.isoformat(),
-                        'user': {
-                            'id': 99999,
-                            'username': username_raw,
-                        },
-                    }
-                )
-            else:
-                return JsonResponse({'error': 'Invalid admin password'}, status=401)
-
-        result, error = _post_external_or_error(
-            url_env='LOGIN_THROUGH_PASSWORD_URL',
-            payload={
-                'email': username_raw,
-                'password': password,
-                'system_name': SYSTEM_NAME,
-            },
-            failure_status=401,
-            failure_default_message='Invalid username or password.',
-        )
-        if error:
-            return error
-
-        session_payload = {'email': username_raw}
-        session_payload.update(result or {})
-        raw_token, expires_at = create_signed_session(payload=session_payload)
-
-        return JsonResponse(
-            {
-                'token': raw_token,
-                'expires_at': expires_at.isoformat(),
-                'user': {
-                    'id': None,
-                    'username': username_raw,
-                },
-            }
-        )
-
-
-class ApiForgotPasswordView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        email = (payload.get('email') or '').strip()
-        password = (payload.get('password') or '').strip()
-
-        if not email or not password:
-            return JsonResponse({'error': 'Please enter email and password.'}, status=400)
-
-        result, error = _post_external_or_error(
-            url_env='FORGET_PASSWORD_URL',
-            payload={
-                'email': email,
-                'password': password,
-                'system_name': SYSTEM_NAME,
-            },
-            failure_status=400,
-            failure_default_message='Unable to reset password.',
-        )
-        if error:
-            return error
-
-        return JsonResponse({'ok': True, 'message': _external_success_message(result or {})})
-
-
-class ApiRegisterView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        display_name = (payload.get('display_name') or '').strip()
-        email = (payload.get('email') or '').strip()
-        phone_number = _normalize_phone(payload.get('phone_number') or '')
-        password = (payload.get('password') or '').strip()
-
-        if not display_name or not email or not phone_number or not password:
-            return JsonResponse({'error': 'Please fill all required fields.'}, status=400)
-
-        result, error = _post_external_or_error(
-            url_env='REGISTER_URL',
-            payload={
-                'display_name': display_name,
-                'email': email,
-                'phone_number': phone_number,
-                'password': password,
-                'system_name': SYSTEM_NAME,
-                'role': REGISTER_ROLE,
-            },
-            failure_status=400,
-            failure_default_message='Unable to create account.',
-        )
-        if error:
-            return error
-
-        return JsonResponse({'ok': True, 'message': _external_success_message(result or {})})
-
-
-class ApiMeView(View):
+class ApiCertificateView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if session_payload is None:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
-
-        email = (session_payload.get('email') or '').strip() or None
-
-        return JsonResponse(
-            {
-                'user': {
-                    'id': None,
-                    'username': email,
-                },
-                'member': {
-                    'id': None,
-                    'name': session_payload.get('display_name'),
-                    'email': email,
-                    'phone': session_payload.get('phone_number'),
-                },
-            }
-        )
-
-
-class ApiLogoutView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        return JsonResponse({'ok': True})
-
-
-class ApiOtpRequestView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        channel = (payload.get('channel') or '').strip().lower()
-        phone = _normalize_phone(payload.get('phone') or payload.get('username') or '')
-        email = (payload.get('email') or payload.get('username') or '').strip()
-
-        if channel not in {'whatsapp', 'email'}:
-            return JsonResponse({'error': 'Invalid OTP channel.'}, status=400)
-
-        if channel == 'whatsapp' and not phone:
-            return JsonResponse({'error': 'Please enter mobile number.'}, status=400)
-        if channel == 'email' and not email:
-            return JsonResponse({'error': 'Please enter email id.'}, status=400)
-
-        identifier = email if channel == 'email' else phone
-        result, error = _post_external_or_error(
-            url_env='SEND_OTP_URL',
-            payload={
-                'email': identifier,
-                'type': channel,
-                'system_name': SYSTEM_NAME,
-            },
-            failure_status=400,
-            failure_default_message='Unable to request key',
-        )
-        if error:
-            return error
-
-        challenge_id, expires_at = create_signed_otp_challenge(email=identifier, channel=channel)
-        return JsonResponse({'challenge_id': challenge_id, 'expires_at': expires_at.isoformat()})
-
-
-class ApiOtpVerifyView(View):
-    def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        challenge_id = payload.get('challenge_id')
-        otp = (payload.get('otp') or '').strip()
-
-        if not challenge_id or not otp:
-            return JsonResponse({'error': 'Please enter OTP.'}, status=400)
-
-        try:
-            otp_payload = load_signed_otp_challenge(str(challenge_id))
-        except ExternalAuthError as exc:
-            return JsonResponse({'error': str(exc)}, status=401)
-
-        email = (otp_payload.get('email') or '').strip()
-        result, error = _post_external_or_error(
-            url_env='VERIFY_OTP_URL',
-            payload={
-                'email': email,
-                'otp': otp,
-                'system_name': SYSTEM_NAME,
-            },
-            failure_status=401,
-            failure_default_message='Invalid or expired OTP.',
-        )
-        if error:
-            return error
-
-        session_payload = {'email': email}
-        session_payload.update(result or {})
-        raw_token, expires_at = create_signed_session(payload=session_payload)
-
-        return JsonResponse(
-            {
-                'token': raw_token,
-                'expires_at': expires_at.isoformat(),
-                'user': {'id': None, 'username': email},
-            }
-        )
+        player_name = request.GET.get('name', 'Player')
+        score = request.GET.get('score', '0')
+        level = request.GET.get('level', 'N/A')
+        
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        
+        # Simple Certificate Design
+        p.setFont("Helvetica-Bold", 30)
+        p.drawCentredString(300, 700, "CERTIFICATE OF ACHIEVEMENT")
+        
+        p.setFont("Helvetica", 18)
+        p.drawCentredString(300, 650, "This is to certify that")
+        
+        p.setFont("Helvetica-Bold", 24)
+        p.drawCentredString(300, 600, player_name.upper())
+        
+        p.setFont("Helvetica", 18)
+        p.drawCentredString(300, 550, f"has successfully completed the Sortonym Challenge")
+        p.drawCentredString(300, 520, f"Difficulty: {level.capitalize()}")
+        p.drawCentredString(300, 490, f"Final Score: {score}")
+        
+        p.setFont("Helvetica-Oblique", 14)
+        p.drawCentredString(300, 400, f"Generated on: {timezone.now().strftime('%Y-%m-%d %H:%M')}")
+        
+        p.showPage()
+        p.save()
+        
+        buffer.seek(0)
+        pdf_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+        
+        return JsonResponse({'certificate_base64': pdf_base64})
 
 
 LEVEL_CONFIG = {
@@ -337,26 +255,21 @@ LEVEL_CONFIG = {
 
 class ApiGameStartView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if session_payload is None:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        player_info = _get_player_info(request)
         
         payload = _json_body(request)
         level = (payload.get('level') or 'easy').lower()
+        exclude_words = payload.get('excludeWords', [])  # Get excluded words list
         
         # DAILY CHALLENGE VALIDATION
         if level == 'daily':
-            email = (session_payload.get('email') or '').strip()
-            phone = (session_payload.get('phone_number') or '').strip()
+            email = player_info['email']
             
             # Check if played today
             today = timezone.now().date()
-            query = Q(created_at__date=today) & (Q(player_email=email) | (Q(player_phone=phone) if phone else Q(pk__in=[])))
-            
-            if GameResult.objects.filter(query).exists():
+            if GameResult.objects.filter(player_email=email, created_at__date=today).exists():
                 return JsonResponse({'error': 'You have already played the Daily Challenge today.'}, status=403)
                 
-            # Use 'hard' config for daily challenge
             config = LEVEL_CONFIG['hard']
         elif level not in LEVEL_CONFIG:
             level = 'easy'
@@ -364,25 +277,69 @@ class ApiGameStartView(View):
         else:
             config = LEVEL_CONFIG[level]
 
-        count = SortonymWord.objects.count()
-        if count == 0:
-            return JsonResponse({'error': 'No words available in database'}, status=500)
-
-        random_index = random.randint(0, count - 1)
-        word_obj = SortonymWord.objects.all()[random_index]
+        word_obj = None
+        
+        # Try to get a unique word that's not in the exclude list
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            dynamic_data = get_words_from_wordfreq(level)
+            
+            if dynamic_data and dynamic_data['word'] not in exclude_words:
+                try:
+                    word_obj, _ = SortonymWord.objects.get_or_create(
+                        word=dynamic_data['word'],
+                        defaults={
+                            'synonyms': dynamic_data['synonyms'],
+                            'antonyms': dynamic_data['antonyms']
+                        }
+                    )
+                    # Update synonyms/antonyms if they are empty or just to refresh
+                    if not word_obj.synonyms or not word_obj.antonyms:
+                         word_obj.synonyms = dynamic_data['synonyms']
+                         word_obj.antonyms = dynamic_data['antonyms']
+                         word_obj.save()
+                    break  # Success, exit the loop
+                except Exception as e:
+                    print(f"Error saving dynamic word: {e}")
+                    word_obj = None
+                    continue  # Try next attempt
+        
+        # If wordfreq fails or save fails, use fallback words (also check exclude list)
+        if not word_obj:
+            available_fallbacks = [
+                fallback for fallback in FALLBACK_WORDS_LIST 
+                if fallback['word'] not in exclude_words
+            ]
+            
+            if available_fallbacks:
+                fallback = random.choice(available_fallbacks)
+                try:
+                    word_obj, _ = SortonymWord.objects.get_or_create(
+                        word=fallback['word'],
+                        defaults={
+                            'synonyms': fallback['synonyms'],
+                            'antonyms': fallback['antonyms']
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error saving fallback word: {e}")
+                    return JsonResponse({'error': 'Database error initializing game'}, status=500)
+            else:
+                # All fallback words are excluded, return error
+                return JsonResponse({'error': 'No available words for this round'}, status=500)
 
         # Parse synonyms/antonyms
-        # Assuming comma separated strings in DB
         all_syns = [s.strip() for s in word_obj.synonyms.split(',') if s.strip()]
         all_ants = [a.strip() for a in word_obj.antonyms.split(',') if a.strip()]
 
-        # Select by difficulty
         num_pairs = config['pairs']
-        
-        # Ensure we have enough words, else fallback to max available
-        # Ideally database should have enough words for Hard mode
         safe_pairs = min(len(all_syns), len(all_ants), num_pairs)
         
+        # If valid pairs are less than config but we have at least 1, just use what we have
+        if safe_pairs < 1:
+            # Should not happen with our fallback, but just in case
+             return JsonResponse({'error': 'Word configuration error (no pairs)'}, status=500)
+
         start_syns = random.sample(all_syns, safe_pairs)
         start_ants = random.sample(all_ants, safe_pairs)
 
@@ -405,21 +362,16 @@ class ApiGameStartView(View):
 
 class ApiGameSubmitView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if session_payload is None:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        player_info = _get_player_info(request)
+        email = player_info['email']
+        player_name = player_info['name']
         
-        email = (session_payload.get('email') or '').strip()
-        player_name = session_payload.get('display_name') or email
-        phone = (session_payload.get('phone_number') or '').strip()
         payload = _json_body(request)
-        
         round_id = payload.get('roundId')
         synonym_ids = payload.get('synonyms', [])
         antonym_ids = payload.get('antonyms', [])
         time_taken = float(payload.get('timeTaken') or 0)
         level = (payload.get('level') or 'easy').lower()
-        reason = payload.get('reason')
 
         if level not in LEVEL_CONFIG:
             level = 'easy'
@@ -435,36 +387,23 @@ class ApiGameSubmitView(View):
 
         correct_count = 0
         
-        # Scoring Logic
-        # ID format: 'syn_Word' or 'ant_Word'.
-        # We need to extract the word part.
-        
         def extract_word(wid):
-            # wid is like 'syn_Happy' or 'ant_Sad'
             if '_' in wid:
                 return wid.split('_', 1)[1]
             return wid
 
-        # Check Synonyms Box
         for wid in synonym_ids:
             w = extract_word(wid).strip().lower()
             if w in true_syns:
                 correct_count += 1
                 
-        # Check Antonyms Box
         for wid in antonym_ids:
             w = extract_word(wid).strip().lower()
             if w in true_ants:
                 correct_count += 1
         
-        # Base Score: 1.0 point per correct word
         base_scores_val = correct_count * 1.0
-        
-        # Time Bonus: +0.1 point per second saved, but only for correct answers
-        # Formula: (Remaining Time * 0.1) * (Correct Count / Total Expected)
-        # Total Expected depends on level (pairs * 2)
         total_expected = config['pairs'] * 2
-        # Avoid division by zero if something weird happens
         total_expected = max(total_expected, 1)
 
         time_limit = config['time']
@@ -472,7 +411,6 @@ class ApiGameSubmitView(View):
         
         time_bonus = (remaining * 0.1) * (correct_count / float(total_expected))
         
-        # Final Level Multiplier
         subtotal = base_scores_val + time_bonus
         total_score = subtotal * config['multiplier']
         
@@ -480,50 +418,52 @@ class ApiGameSubmitView(View):
         GameResult.objects.create(
             player_email=email,
             player_name=player_name,
-            player_phone=phone,
             round_id=round_id,
             score=total_score,
             total_correct=correct_count,
             time_taken=time_taken
         )
 
-        # --- Update Lobby Results for Team Game (Real-Time Sync) ---
+        # Multiplayer Sync
         game_code = (payload.get('gameCode') or '').strip().upper()
-        # Note: LOBBIES is defined later in this file, but available at runtime
-        if game_code and game_code in LOBBIES:
-            lobby = LOBBIES[game_code]
-            
-            # Identify player's team
-            is_team_a = any(p['id'] == email for p in lobby['teams'].get('A', []))
-            is_team_b = any(p['id'] == email for p in lobby['teams'].get('B', []))
-            
-            selected_team = 'A' if is_team_a else 'B' if is_team_b else None
-            
-            if selected_team:
-                if 'results' not in lobby:
-                    lobby['results'] = []
-                
-                round_num = payload.get('roundNumber')
-                
-                # Append result
-                lobby['results'].append({
-                    'player': player_name,
-                    'player_email': email,
-                    'team': selected_team,
-                    'round': round_num,
-                    'score': total_score,
-                    'total_correct': correct_count,
-                    'time_taken': time_taken,
-                    'accuracy': correct_count, # Simplified
-                    'timestamp': timezone.now().isoformat()
-                })
+        if game_code:
+            try:
+                with transaction.atomic():
+                    lobby = Lobby.objects.select_for_update().get(code=game_code)
+                    results = list(lobby.results_data)
+                    
+                    # Identify player's team from players_data using unique uid
+                    user_id = player_info['uid']
+                    player_data = next((p for p in lobby.players_data if p['id'] == user_id), None)
+                    
+                    # If player not found in lobby players_data, they shouldn't be submitting to this lobby
+                    if not player_data:
+                        print(f"Warning: Submission from UID {user_id} not found in lobby {game_code}")
+                        selected_team = payload.get('team', 'A') 
+                    else:
+                        selected_team = player_data.get('team', 'A')
+                    
+                    results.append({
+                        'player': player_name,
+                        'player_email': email,
+                        'player_id': user_id,
+                        'team': selected_team,
+                        'score': total_score,
+                        'total_correct': correct_count,
+                        'time_taken': time_taken,
+                        'timestamp': timezone.now().isoformat()
+                    })
+                    lobby.results_data = results
+                    lobby.save()
+            except Lobby.DoesNotExist:
+                pass
         
         return JsonResponse({
             'score': total_score,
             'base_score': base_scores_val,
             'time_bonus': time_bonus,
             'total_correct': correct_count,
-            'max_score': (total_expected + 30) * config['multiplier'] # Approx max
+            'max_score': (total_expected + 30) * config['multiplier']
         })
 
 
@@ -565,196 +505,265 @@ class ApiLeaderboardView(View):
 
 class ApiGoogleLoginView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        payload = _json_body(request)
-        token = payload.get('token')
-
-        if not token:
-            return JsonResponse({'error': 'Google token is required.'}, status=400)
-
-        # Verify token with Google
-        try:
-            # We call Google's tokeninfo endpoint to verify the ID token
-            # This handles signature verification and expiration checks
-            response = requests.get(
-                f'https://oauth2.googleapis.com/tokeninfo?id_token={token}',
-                timeout=10
-            )
-            
-            if response.status_code != 200:
-                return JsonResponse({'error': 'Invalid Google token.'}, status=401)
-                
-            google_data = response.json()
-            
-            # Strict Audience Check (Security)
-            client_id = os.getenv('GOOGLE_CLIENT_ID')
-            if client_id and google_data.get('aud') != client_id:
-                 return JsonResponse({'error': 'Invalid token audience (Client ID mismatch).'}, status=401)
-
-            email = google_data.get('email')
-            display_name = google_data.get('name') or google_data.get('given_name') or email.split('@')[0]
-
-            if not email:
-                return JsonResponse({'error': 'Email not provided by Google.'}, status=400)
-
-            # In this system, we treat new and existing users seamlessly.
-            # We create a session with the verified identity.
-            session_payload = {
-                'email': email,
-                'display_name': display_name,
-                'status': 'success',
-                'google_auth': True
-            }
-            
-            raw_token, expires_at = create_signed_session(payload=session_payload)
-
-            return JsonResponse(
-                {
-                    'token': raw_token,
-                    'expires_at': expires_at.isoformat(),
-                    'user': {
-                        'id': None,
-                        'username': email,
-                    },
-                }
-            )
-        except requests.exceptions.RequestException as e:
-            return JsonResponse({'error': f'Failed to verify token with Google: {str(e)}'}, status=502)
-        except Exception as e:
-            return JsonResponse({'error': 'An internal error occurred during Google Login.'}, status=500)
+        return JsonResponse({'error': 'Authentication is disabled'}, status=410)
 
 
 # --- TEAM LOBBY API (In-Memory for Real-Time Sync) ---
 
-# Global in-memory store for active lobbies
-# Format: { 'CODE': { code: 'CODE', host: 'email', hostName: 'name', players: [], teams: {A:[], B:[]}, settings: {...}, status: 'waiting' } }
-LOBBIES = {}
+# Global lobbies in-memory is removed in favor of the Lobby model
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ApiLobbyCreateView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if not session_payload:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
-        
-        user_email = session_payload.get('email')
-        user_name = session_payload.get('display_name') or user_email.split('@')[0]
-        
-        payload = _json_body(request)
-        team_name = payload.get('teamName')
-        
-        # Generate Code
-        code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=6))
-        
-        # Init Lobby
-        LOBBIES[code] = {
-            'code': code,
-            'host': user_email,
-            'hostName': user_name,
-            'teamName': team_name,
-            'players': [{
-                'id': user_email,
-                'name': user_name,
-                'picture': None,
-                'isHost': True
-            }],
-            'teams': {
-                'A': [],
-                'B': []
-            },
-            'difficulty': 'MEDIUM',
-            'status': 'WAITING',
-            'created_at': timezone.now().isoformat()
-        }
-        
-        return JsonResponse({'code': code, 'lobby': LOBBIES[code]})
+        try:
+            print("ApiLobbyCreateView: POST received")
+            try:
+                player_info = _get_player_info(request)
+                print(f"Player info parsed: {player_info}")
+            except Exception as e:
+                print(f"Error in _get_player_info: {e}")
+                raise e
 
+            user_email = player_info['email']
+            user_name = player_info['name']
+            user_id = player_info['uid'] # Unique ID (Email or guest_name)
+            
+            payload = _json_body(request)
+            team_name = payload.get('teamName', 'Team A')
+            
+            # Generate Code
+            code = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=6))
+            print(f"Generated lobby code: {code}")
+            
+            # Init Lobby
+            lobby = Lobby.objects.create(
+                code=code,
+                host_email=user_id, # Store unique ID as host identifier
+                host_name=user_name,
+                settings={'team_name': team_name, 'difficulty': 'MEDIUM'},
+                players_data=[{
+                    'id': user_id,
+                    'name': user_name,
+                    'team': None, # Host must also select team manually
+                    'isHost': True
+                }]
+            )
+            print("Lobby created successfully")
+        except Exception as e:
+            print(f"ApiLobbyCreateView ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'Internal Server Error: {str(e)}'}, status=500)
+        
+        return JsonResponse({
+            'code': code, 
+            'lobby': {
+                'code': lobby.code,
+                'host': lobby.host_email,
+                'hostName': lobby.host_name,
+                'status': lobby.status,
+                'players': lobby.players_data
+            }
+        })
+
+
+def _get_lobby_response(lobby):
+    """Helper to format lobby data consistently for the frontend."""
+    players = lobby.players_data
+    teams = {'unassigned': []} # Always have an unassigned bucket
+    
+    # 1. Dynamically group players into teams (supports 2, 10, 22+ teams)
+    for p in players:
+        team_id = p.get('team')
+        if not team_id:
+            teams['unassigned'].append(p)
+        else:
+            if team_id not in teams:
+                teams[team_id] = []
+            teams[team_id].append(p)
+    
+    # 2. Identify all players who have been assigned to ANY team
+    active_pids = [p.get('id') for p in players if p.get('team') is not None]
+    
+    # 3. Calculate completion map from actual submissions
+    comp_map = {}
+    for r in lobby.results_data:
+        pid = r.get('player_id') or r.get('player_email')
+        if pid:
+            comp_map[pid] = comp_map.get(pid, 0) + 1
+            
+    # 4. Global synchronization: Everyone assigned to a team must finish 5 rounds
+    all_finished = len(active_pids) > 0 and all(comp_map.get(pid, 0) >= 5 for pid in active_pids)
+    
+    return {
+        'code': lobby.code,
+        'host': lobby.host_email,
+        'hostName': lobby.host_name,
+        'status': lobby.status,
+        'players': players,
+        'teams': teams,
+        'difficulty': lobby.settings.get('difficulty', 'MEDIUM'),
+        'teamSize': lobby.settings.get('teamSize', '10'),
+        'teamName': lobby.settings.get('team_name', 'Team Battle'),
+        'results': lobby.results_data,
+        'all_finished': all_finished
+    }
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ApiLobbyJoinView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if not session_payload:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
-            
-        user_email = session_payload.get('email')
-        user_name = session_payload.get('display_name') or user_email.split('@')[0]
+        player_info = _get_player_info(request)
+        user_id = player_info['uid']
+        user_name = player_info['name']
         
         payload = _json_body(request)
         code = (payload.get('code') or '').upper().strip()
+        display_name = (payload.get('displayName') or user_name).strip()
         
-        if code not in LOBBIES:
+        if not display_name:
+             return JsonResponse({'error': 'Name is required'}, status=400)
+        
+        try:
+            with transaction.atomic():
+                lobby = Lobby.objects.select_for_update().get(code=code)
+                
+                # Check Name Duplication (Case insensitive)
+                players = list(lobby.players_data)
+                for p in players:
+                    # If names match but IDs differ, it's a duplicate
+                    if p['name'].lower() == display_name.lower() and p['id'] != user_id:
+                        return JsonResponse({'error': f'Name "{display_name}" is already taken'}, status=400)
+                
+                # Add player if not exists
+                existing_player = next((p for p in players if p['id'] == user_id), None)
+                if not existing_player:
+                    players.append({
+                        'id': user_id,
+                        'name': display_name,
+                        'team': None, # Default to None (Unassigned) - User MUST select team
+                        'isHost': False,
+                        'picture': player_info.get('picture')
+                    })
+                    lobby.players_data = players
+                    lobby.save()
+                else:
+                    # Update name if changed?
+                    if existing_player['name'] != display_name:
+                        existing_player['name'] = display_name
+                        lobby.players_data = players
+                        lobby.save()
+                
+                return JsonResponse(_get_lobby_response(lobby))
+        except Lobby.DoesNotExist:
             return JsonResponse({'error': 'Lobby not found'}, status=404)
-            
-        lobby = LOBBIES[code]
-        
-        # Add player if not exists
-        if not any(p['id'] == user_email for p in lobby['players']):
-            lobby['players'].append({
-                'id': user_email,
-                'name': user_name,
-                'picture': None,
-                'isHost': False
-            })
-            
-        return JsonResponse({'code': code, 'lobby': lobby})
 
 
 class ApiLobbyStatusView(View):
     def get(self, request: HttpRequest) -> JsonResponse:
         code = request.GET.get('code', '').upper().strip()
-        if code not in LOBBIES:
+        try:
+            lobby = Lobby.objects.get(code=code)
+        except Lobby.DoesNotExist:
             return JsonResponse({'error': 'Lobby not found'}, status=404)
             
-        return JsonResponse(LOBBIES[code])
+        return JsonResponse(_get_lobby_response(lobby))
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ApiLobbyUpdateView(View):
     def post(self, request: HttpRequest) -> JsonResponse:
-        session_payload = _get_session_payload(request)
-        if not session_payload:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
-            
-        user_email = session_payload.get('email')
+        player_info = _get_player_info(request)
+        user_id = player_info['uid']
         
         payload = _json_body(request)
         code = (payload.get('code') or '').upper().strip()
         action = payload.get('action') 
         
-        if code not in LOBBIES:
-            return JsonResponse({'error': 'Lobby not found'}, status=404)
-            
-        lobby = LOBBIES[code]
-        
-        if action == 'join_team':
-            team = payload.get('team') # 'A' or 'B'
-            if team not in ['A', 'B']:
-                return JsonResponse({'error': 'Invalid team'}, status=400)
+        try:
+            with transaction.atomic():
+                lobby = Lobby.objects.select_for_update().get(code=code)
                 
-            # Remove from both teams first
-            lobby['teams']['A'] = [p for p in lobby['teams']['A'] if p['id'] != user_email]
-            lobby['teams']['B'] = [p for p in lobby['teams']['B'] if p['id'] != user_email]
-            
-            # Add to target team
-            player_data = next((p for p in lobby['players'] if p['id'] == user_email), None)
-            if not player_data:
-                # Fallback
-                player_data = {'id': user_email, 'name': user_email.split('@')[0], 'picture': None}
-                
-            lobby['teams'][team].append(player_data)
-            
-        elif action == 'leave_team':
-             lobby['teams']['A'] = [p for p in lobby['teams']['A'] if p['id'] != user_email]
-             lobby['teams']['B'] = [p for p in lobby['teams']['B'] if p['id'] != user_email]
-             
-        elif action == 'set_difficulty':
-            if lobby['host'] != user_email:
-                return JsonResponse({'error': 'Only host can change difficulty'}, status=403)
-            lobby['difficulty'] = payload.get('difficulty')
+                if action == 'join_team':
+                    team = payload.get('team') # Can be 'A', 'B', '1', '2' ... '22'
+                    if not team:
+                        return JsonResponse({'error': 'Team name is required'}, status=400)
+                    
+                    players = list(lobby.players_data)
+                    found = False
+                    for p in players:
+                        if p['id'] == user_id:
+                            p['team'] = team
+                            found = True
+                            break
+                    
+                    if not found:
+                         return JsonResponse({'error': 'Player not in lobby'}, status=403)
+                         
+                    lobby.players_data = players
+                    lobby.save()
+                    
+                elif action == 'leave_team':
+                    players = list(lobby.players_data)
+                    for p in players:
+                        if p['id'] == user_id:
+                            p['team'] = None # Reset to unassigned
+                            break
+                    lobby.players_data = players
+                    lobby.save()
 
-        elif action == 'start_game':
-            if lobby['host'] != user_email:
-                return JsonResponse({'error': 'Only host can start game'}, status=403)
-            lobby['status'] = 'STARTED'
+                elif action == 'set_difficulty':
+                    if lobby.host_email != user_id:
+                        return JsonResponse({'error': 'Only host can change difficulty'}, status=403)
+                    s = lobby.settings
+                    s['difficulty'] = payload.get('difficulty')
+                    lobby.settings = s
+                    lobby.save()
+
+                elif action == 'start_game':
+                    if lobby.host_email != user_id:
+                        return JsonResponse({'error': 'Only host can start game'}, status=403)
+                    
+                    # Dynamic Team Validation
+                    assigned_teams = set(p.get('team') for p in lobby.players_data if p.get('team'))
+                    unassigned_count = sum(1 for p in lobby.players_data if not p.get('team'))
+                    
+                    if len(assigned_teams) < 2:
+                        return JsonResponse({'error': 'At least two teams are required to start the game'}, status=400)
+                    
+                    if unassigned_count > 0:
+                         return JsonResponse({'error': f'All {unassigned_count} players must select a team'}, status=400)
+
+                    lobby.status = 'STARTED'
+                    lobby.results_data = [] # Critical for synchronization
+                    lobby.save()
+                
+                return JsonResponse(_get_lobby_response(lobby))
+
+        except Lobby.DoesNotExist:
+            return JsonResponse({'error': 'Lobby not found'}, status=404)
+
+#get results Api
+class ApiGetResultsView(View):
+    def get(self, request: HttpRequest, code) -> JsonResponse:
+        try:
+            lobby = Lobby.objects.get(code=code)
+            return JsonResponse(_get_lobby_response(lobby))
+        except Lobby.DoesNotExist:
+            return JsonResponse({'error': 'Lobby not found'}, status=404)
+
+class ApiGameScoreView(View):
+    """Returns the latest score for the current player."""
+    def get(self, request: HttpRequest) -> JsonResponse:
+        player_info = _get_player_info(request)
+        email = player_info['email']
+        
+        last_result = GameResult.objects.filter(player_email=email).order_by('-created_at').first()
+        if not last_result:
+            return JsonResponse({'error': 'No scores found'}, status=404)
             
-        return JsonResponse(lobby)
+        return JsonResponse({
+            'score': last_result.score,
+            'total_correct': last_result.total_correct,
+            'time_taken': last_result.time_taken,
+            'created_at': last_result.created_at
+        })

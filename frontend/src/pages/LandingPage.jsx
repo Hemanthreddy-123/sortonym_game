@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
+import { useDarkMode } from '../context/DarkModeContext.jsx'
 
 import userAvatar from '../assets/user_avatar.png'
 import '../styles/landing.css'
 import '../styles/cta-buttons.css'
-import { useTheme } from '../hooks/useTheme'
 
 function LandingPage() {
   const navigate = useNavigate()
   const { member, signOut, updateMember } = useAuth()
+  const { isDarkMode, toggleDarkMode } = useDarkMode()
   const [menuOpen, setMenuOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(member?.name || '')
@@ -111,22 +112,6 @@ function LandingPage() {
     navigate('/game?mode=daily')
   }
 
-  // Theme Toggle Logic
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light')
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.body.classList.add('dark-mode')
-    } else {
-      document.body.classList.remove('dark-mode')
-    }
-    localStorage.setItem('theme', theme)
-  }, [theme])
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light')
-  }
-
   const menuRef = useRef(null)
 
 
@@ -183,10 +168,10 @@ function LandingPage() {
             <div className="topbar-right">
               <button
                 className="theme-toggle-btn"
-                onClick={toggleTheme}
-                aria-label="Toggle Theme"
+                onClick={toggleDarkMode}
+                aria-label="Toggle Dark Mode"
               >
-                {theme === 'light' ? <i className="bi bi-moon"></i> : <i className="bi bi-sun-fill"></i>}
+                {isDarkMode ? <i className="bi bi-sun-fill"></i> : <i className="bi bi-moon"></i>}
               </button>
 
               <div className="dropdown" ref={menuRef}>
@@ -345,7 +330,7 @@ function LandingPage() {
                 padding: 30px;
                 border-radius: 16px;
                 text-align: center;
-                max-width: 400px;
+                max-width: 450px;
                 width: 90%;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.2);
                 border: 2px solid #00A63F;
@@ -378,7 +363,6 @@ function LandingPage() {
                 justify-content: center;
               }
               .daily-card {
-                background: linear-gradient(135deg, #00A63F 0%, #008C35 100%);
                 border-radius: 12px;
                 padding: 20px;
                 color: white;
@@ -490,8 +474,8 @@ function LandingPage() {
             {/* DAILY CHALLENGE DASHBOARD CARD */}
             <div className="daily-card">
               <div className="daily-card-text">
-                <h3 className="text-white">Today's Daily Challenge</h3>
-                <p className="text-white">Compete with everyone on the same words!</p>
+                <h3>Today's Daily Challenge</h3>
+                <p>Compete with everyone on the same words!</p>
               </div>
               {(() => {
                 const today = new Date().toISOString().split('T')[0];
@@ -694,7 +678,7 @@ function LandingPage() {
           </section>
 
           <footer className="landing-footer">
-            <p>© 2026 Sortonym Challenge. Master your vocabulary, one word at a time.</p>
+            <p>Powered by Z.Apps</p>
           </footer>
         </div>
       </main>
